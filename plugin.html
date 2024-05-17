@@ -7,7 +7,16 @@
     <title>Vite + React + TS</title>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/entry/index.tsx"></script>
+    <button>Click me to open!</button>
+    <div id="phone-panel"></div>
+    <script type="module">
+      import BonSipPhone from "/src/entry/plugin.tsx"
+
+      const bonSipPhone = new BonSipPhone({
+        elementId: "phone-panel",
+      })
+
+      bonSipPhone.render()
+    </script>
   </body>
 </html>

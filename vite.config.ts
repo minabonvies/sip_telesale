@@ -1,7 +1,17 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig, loadEnv } from "vite"
+import react from "@vitejs/plugin-react"
+import tsconfigPaths from "vite-tsconfig-paths"
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
-})
+// @ts-expect-error no-explicit-any
+export default ({ mode }) => {
+  process.env = { ...process.env, ...loadEnv(mode, process.cwd()) }
+
+  return defineConfig({
+    plugins: [react(), tsconfigPaths()],
+
+    server: {
+      open: process.env.VITE_OPEN,
+    },
+  })
+}
