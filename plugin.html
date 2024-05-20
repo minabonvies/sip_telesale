@@ -3,20 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <script defer type="module" src="./src/entry/plugin-demo.tsx"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + React + TS</title>
   </head>
   <body>
-    <button>Click me to open!</button>
-    <div id="phone-panel"></div>
-    <script type="module">
-      import BonSipPhone from "/src/entry/plugin.tsx"
-
-      const bonSipPhone = new BonSipPhone({
-        elementId: "phone-panel",
-      })
-
-      bonSipPhone.render()
-    </script>
+    <button id="bon-sip-phone-button">Click me to open!</button>
   </body>
 </html>

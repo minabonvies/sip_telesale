@@ -7,6 +7,7 @@
     "dev": "vite --mode development",
     "dev:plugin": "vite --mode development-plugin",
     "build": "tsc && vite build",
+    "build:plugin": "rollup --config --environment INCLUDE_DEPS,BUILD:production",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
@@ -16,6 +17,10 @@
     "sip.js": "^0.21.2"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-replace": "^5.0.5",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@types/node": "^20.12.12",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
@@ -25,6 +30,9 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
+    "rollup": "^4.17.2",
+    "rollup-plugin-import-css": "^3.5.0",
+    "tslib": "^2.6.2",
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
     "vite-tsconfig-paths": "^4.3.2"
