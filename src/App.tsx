@@ -7,10 +7,10 @@ import dtmf_file from './assets/sounds-from-sipml/dtmf.wav';
 
 const webSocketServer = "wss://demo.sip.telesale.org:7443/ws"
 const destination = "sip:3001@demo.sip.telesale.org"
-const agent = "sip:3002@demo.sip.telesale.org"
+const agentUri = "sip:3002@demo.sip.telesale.org"
 const authorizationUsername = "3002"
 const authorizationPassword = "42633506"
-const noAnswerTimeout = 12
+const noAnswerTimeout = 12 // optional
 
 function App() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -18,14 +18,16 @@ function App() {
   const ringBackToneRef = useRef<HTMLAudioElement | null>(null)
   const dtmfRef = useRef<HTMLAudioElement | null>(null)
   const simpleUserRef = useRef<Web.SimpleUser | null>(null)
+  // const [tone, setTone] = useState('')
   const [isHold, setIsHold] = useState(false)
   const [isMute, setIsMute] = useState(false)
 
+
   useEffect(() => {
     if (!audioRef.current) return
-    if (simpleUserRef.current) return
+    if (!simpleUserRef.current) return
     const simpleUserOptions: Web.SimpleUserOptions = {
-      aor: agent,
+      aor: agentUri,
       delegate: {
         onCallReceived: async () => {
           console.log("onCallReceived Incoming Call!");
@@ -232,6 +234,29 @@ function App() {
     }
   }
 
+  const displayKeypad = () => {
+
+  }
+
+  const handleDTMF = (tone: string) => async () => {
+    // setTone(t => t + tone)
+    // console.log(tone);
+
+
+    // if (!simpleUserRef.current) return
+    // try {
+    //   await simpleUserRef.current.sendDTMF(tone)
+    // } catch (error) {
+    //   console.error(`[${simpleUserRef.current!.id}] failed to sent DTMF`);
+    //   console.error(error);
+    //   alert("Failed to sent DTMF.\n" + error);
+    // }
+    // console.log(tone)
+    // setTimeout(() => {
+
+    // }, timeout);
+  }
+
   return (
     <>
       <audio ref={audioRef}></audio>
@@ -247,6 +272,20 @@ function App() {
       <button onClick={handleHangUp}>Hang Up</button>
       <button onClick={handleHold}>{isHold ? 'UnHold' : 'Hold'}</button>
       <button onClick={handleMute}>{isMute ? 'UnMute' : 'Mute'}</button>
+      <button onClick={displayKeypad}>Keypad</button>
+      <button onClick={handleDTMF("1")}>1</button>
+      <button onClick={handleDTMF("2")}>2</button>
+      <button onClick={handleDTMF("3")}>3</button>
+      <button onClick={handleDTMF("4")}>4</button>
+      <button onClick={handleDTMF("5")}>5</button>
+      <button onClick={handleDTMF("6")}>6</button>
+      <button onClick={handleDTMF("7")}>7</button>
+      <button onClick={handleDTMF("8")}>8</button>
+      <button onClick={handleDTMF("9")}>9</button>
+      <button onClick={handleDTMF("0")}>0</button>
+      <button onClick={handleDTMF("*")}>*</button>
+      <button onClick={handleDTMF("#")}>#</button>
+      {/* <span>{tone.toString()}</span> */}
     </>
   )
 }
