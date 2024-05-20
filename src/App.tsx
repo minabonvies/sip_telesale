@@ -1,33 +1,252 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useRef, useEffect, useState } from 'react'
+import { Web } from "sip.js";
 import './App.css'
+import ringtone_file from './assets/sounds-from-sipml/ringtone.wav';
+import ringbacktone_file from './assets/sounds-from-sipml/ringbacktone.wav';
+import dtmf_file from './assets/sounds-from-sipml/dtmf.wav';
+
+const webSocketServer = "wss://demo.sip.telesale.org:7443/ws"
+const destination = "sip:3001@demo.sip.telesale.org"
+const agent = "sip:3002@demo.sip.telesale.org"
+const authorizationUsername = "3002"
+const authorizationPassword = "42633506"
+const noAnswerTimeout = 12
 
 function App() {
-  const [count, setCount] = useState(0)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const ringToneRef = useRef<HTMLAudioElement | null>(null)
+  const ringBackToneRef = useRef<HTMLAudioElement | null>(null)
+  const dtmfRef = useRef<HTMLAudioElement | null>(null)
+  const simpleUserRef = useRef<Web.SimpleUser | null>(null)
+  const [isHold, setIsHold] = useState(false)
+  const [isMute, setIsMute] = useState(false)
+
+  useEffect(() => {
+    if (!audioRef.current) return
+    if (simpleUserRef.current) return
+    const simpleUserOptions: Web.SimpleUserOptions = {
+      aor: agent,
+      delegate: {
+        onCallReceived: async () => {
+          console.log("onCallReceived Incoming Call!");
+          startRingTone()
+          // 來電畫面
+        },
+        onCallCreated: async () => {
+          stopRingBackTone()
+          // 通話中畫面
+        }
+      },
+      media: {
+        constraints: {
+          audio: true,
+          video: true,
+        },
+        remote: {
+          audio: audioRef.current,
+        },
+      },
+      userAgentOptions: {
+        authorizationPassword,
+        authorizationUsername,
+        noAnswerTimeout
+      }
+    }
+    simpleUserRef.current = new Web.SimpleUser(webSocketServer, simpleUserOptions)
+  }, [])
+
+  const handleConnect = async () => {
+    if (!simpleUserRef.current) return
+
+    try {
+      await simpleUserRef.current.connect()
+      console.log("Connected")
+      await simpleUserRef.current.register()//registererOptions,registererRegisterOptions
+      console.log("Registered");
+    } catch (error) {
+      console.error(`[${simpleUserRef.current!.id}] failed to connect`);
+      console.error(error);
+      alert("Failed to connect.\n" + error);
+    }
+  }
+
+  const handleDisconnect = async () => {
+    if (!simpleUserRef.current) return
+
+    try {
+      await simpleUserRef.current.unregister()
+      await simpleUserRef.current.disconnect()//registererUnregisterOptions
+      console.log("Disconnected");
+    } catch (error) {
+      console.error(`[${simpleUserRef.current!.id}] failed to disconnect`);
+      console.error(error);
+      alert("Failed to disconnect.\n" + error);
+    }
+  }
+
+  const handleCall = async () => {
+    if (!simpleUserRef.current) return
+
+    try {
+      await simpleUserRef.current.call(destination, { inviteWithoutSdp: false })
+      startRingBackTone()
+    } catch (error) {
+      console.error(`[${simpleUserRef.current!.id}] failed to place call`);
+      console.error(error);
+      alert("Failed to place call.\n" + error);
+    }
+  }
+
+  const handleAnswer = async () => {
+    if (!simpleUserRef.current) return
+
+    try {
+      await simpleUserRef.current.answer()
+      stopRingTone()
+    } catch (error) {
+      console.error(`[${simpleUserRef.current!.id}] failed to answer call`);
+      console.error(error);
+      alert("Failed to answer call.\n" + error);
+    }
+  }
+
+  const handleReject = async () => {
+    if (!simpleUserRef.current) return
+
+    try {
+      await simpleUserRef.current.decline()
+      stopRingTone()
+    } catch (error) {
+      console.error(`[${simpleUserRef.current!.id}] failed to reject call`);
+      console.error(error);
+      alert("Failed to reject call.\n" + error);
+    }
+  }
+
+  const handleHangUp = async () => {
+    if (!simpleUserRef.current) return
+
+    try {
+      await simpleUserRef.current.hangup()
+    } catch (error) {
+      console.error(`[${simpleUserRef.current!.id}] failed to hangup call`);
+      console.error(error);
+      alert("Failed to hangup call.\n" + error);
+    }
+  }
+
+  const startRingTone = () => {
+    if (!ringToneRef.current) return
+
+    try { ringToneRef.current.play(); }
+    catch (e) {
+      console.log(e);
+    }
+  }
+  const stopRingTone = () => {
+    if (!ringToneRef.current) return
+
+    try { ringToneRef.current.pause(); }
+    catch (e) {
+      console.log(e);
+    }
+  }
+  const startRingBackTone = () => {
+    if (!ringBackToneRef.current) return
+
+    try { ringBackToneRef.current.play(); }
+    catch (e) {
+      console.log(e);
+    }
+  }
+  const stopRingBackTone = () => {
+    if (!ringBackToneRef.current) return
+
+    try { ringBackToneRef.current.pause(); }
+    catch (e) {
+      console.log(e);
+    }
+  }
+  const handleHold = () => {
+    if (!simpleUserRef.current) return
+    if (simpleUserRef.current.isHeld() == true) {
+      unHold()
+      setIsHold(false)
+    } else {
+      hold()
+      setIsHold(true)
+    }
+  }
+
+  const hold = async () => {
+    if (!simpleUserRef.current) return
+    try {
+      await simpleUserRef.current.hold()
+    } catch (error) {
+      console.error(`[${simpleUserRef.current!.id}] failed to hold call`);
+      console.error(error);
+      alert("Failed to hold call.\n" + error);
+    }
+  }
+
+  const unHold = async () => {
+    if (!simpleUserRef.current) return
+    try {
+      await simpleUserRef.current.unhold()
+    } catch (error) {
+      console.error(`[${simpleUserRef.current!.id}] failed to unhold call`);
+      console.error(error);
+      alert("Failed to unhold call.\n" + error);
+    }
+  }
+  const handleMute = () => {
+    if (!simpleUserRef.current) return
+    if (simpleUserRef.current.isMuted() == true) {
+      unMute()
+      setIsMute(false)
+    } else {
+      mute()
+      setIsMute(true)
+    }
+  }
+
+  const mute = () => {
+    if (!simpleUserRef.current) return
+    try {
+      simpleUserRef.current.mute()
+    } catch (error) {
+      console.error(`[${simpleUserRef.current!.id}] failed to mute call`);
+      console.error(error);
+      alert("Failed to mute call.\n" + error);
+    }
+  }
+
+  const unMute = () => {
+    if (!simpleUserRef.current) return
+    try {
+      simpleUserRef.current.unmute()
+    } catch (error) {
+      console.error(`[${simpleUserRef.current!.id}] failed to unmute call`);
+      console.error(error);
+      alert("Failed to unmute call.\n" + error);
+    }
+  }
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <audio ref={audioRef}></audio>
+      <audio ref={ringToneRef} src={ringtone_file}> </audio>
+      <audio ref={ringBackToneRef} src={ringbacktone_file}> </audio>
+      <audio ref={dtmfRef} src={dtmf_file}> </audio>
+
+      <button onClick={handleConnect}>Connect</button>
+      <button onClick={handleDisconnect}>Disconnect</button>
+      <button onClick={handleCall}>Call</button>
+      <button onClick={handleReject}>Reject</button>
+      <button onClick={handleAnswer}>Answer</button>
+      <button onClick={handleHangUp}>Hang Up</button>
+      <button onClick={handleHold}>{isHold ? 'UnHold' : 'Hold'}</button>
+      <button onClick={handleMute}>{isMute ? 'UnMute' : 'Mute'}</button>
     </>
   )
 }
