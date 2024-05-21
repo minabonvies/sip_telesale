@@ -5,13 +5,13 @@ import tsconfigPaths from "vite-tsconfig-paths"
 // https://vitejs.dev/config/
 // @ts-expect-error no-explicit-any
 export default ({ mode }) => {
-  process.env = { ...process.env, ...loadEnv(mode, process.cwd()) }
+  // process.env = { ...process.env, ...loadEnv(mode, process.cwd()) }
 
   return defineConfig({
     plugins: [react(), tsconfigPaths()],
 
-    server: {
-      open: process.env.VITE_OPEN,
-    },
+    // server: {
+    //   open: process.env.VITE_OPEN,
+    // },
   })
 }
