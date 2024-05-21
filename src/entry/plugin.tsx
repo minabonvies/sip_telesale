@@ -1,7 +1,8 @@
 import App from "@/components/App"
-import React from "react"
 import ReactDOM from "react-dom/client"
+import BonTalkProvider from "@/Provider/BonTalkProvider"
 import "./index.css"
+import "./normalize.css"
 
 export default class BonTalk {
   rootId = "_bon_sip_phone_root"
@@ -29,7 +30,9 @@ export default class BonTalk {
     const root = document.createElement("div")
     root.id = this.rootId
     this.rootElement = root
-    this.rootElement.style.opacity = "0"
+    this.rootElement.style.position = "fixed"
+    this.rootElement.style.top = "0"
+    this.rootElement.style.right = "0"
     body.appendChild(root)
 
     // attach open event to button
@@ -37,7 +40,11 @@ export default class BonTalk {
     buttonElement.addEventListener("click", this.togglePanel.bind(this))
 
     this.reactRoot = ReactDOM.createRoot(root)
-    this.reactRoot.render(<App />)
+    this.reactRoot.render(
+      <BonTalkProvider value={this}>
+        <App />
+      </BonTalkProvider>
+    )
   }
 
   togglePanel() {
@@ -46,7 +53,7 @@ export default class BonTalk {
     if (!this.rootElement) {
       return
     }
-    this.rootElement.style.opacity = this.rootElement.style.opacity === "0" ? "1" : "0"
+    this.rootElement.style.transform = this.rootElement.style.transform === "translateX(100%)" ? "translateX(0)" : "translateX(100%)"
   }
 
   destroy() {
