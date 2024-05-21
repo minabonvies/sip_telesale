@@ -1,137 +1,236 @@
 import { useRef, useEffect, useState } from 'react'
-import { Web } from "sip.js";
+import {
+  Invitation,
+  Inviter,
+  InviterOptions,
+  Referral,
+  Registerer,
+  RegistererOptions,
+  Session,
+  SessionState,
+  UserAgent,
+  UserAgentOptions,
+  InvitationAcceptOptions,
+  Transport
+} from "sip.js";
 import './App.css'
 import ringtone_file from './assets/sounds-from-sipml/ringtone.wav';
 import ringbacktone_file from './assets/sounds-from-sipml/ringbacktone.wav';
 import dtmf_file from './assets/sounds-from-sipml/dtmf.wav';
 
+
+/* transportOptions */
 const webSocketServer = "wss://demo.sip.telesale.org:7443/ws"
-const destination = "sip:3001@demo.sip.telesale.org"
+
+/* userAgentOptions */
 const agentUri = "sip:3002@demo.sip.telesale.org"
 const authorizationUsername = "3002"
 const authorizationPassword = "42633506"
+const displayName = "3002 Mina"
 const noAnswerTimeout = 12 // optional
+const transportOptions = {
+  server: webSocketServer,
+  traceSip: false
+}
+const contactParams = { "transport": "wss" }
+
+/* inviteOption */
+const destination = "sip:3001@demo.sip.telesale.org"
+
 
 function App() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const ringToneRef = useRef<HTMLAudioElement | null>(null)
   const ringBackToneRef = useRef<HTMLAudioElement | null>(null)
   const dtmfRef = useRef<HTMLAudioElement | null>(null)
-  const simpleUserRef = useRef<Web.SimpleUser | null>(null)
+  const userAgentRef = useRef<UserAgent | null>(null)
+  const registererRef = useRef<Registerer | null>(null)
   // const [tone, setTone] = useState('')
   const [isHold, setIsHold] = useState(false)
   const [isMute, setIsMute] = useState(false)
+  const [invitation, setInvitation] = useState<Invitation | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
 
 
   useEffect(() => {
     if (!audioRef.current) return
-    if (!simpleUserRef.current) return
-    const simpleUserOptions: Web.SimpleUserOptions = {
-      aor: agentUri,
+    /*
+    * Create a user agent
+    */
+    const uri = UserAgent.makeURI(agentUri)
+    if (!uri) {
+      throw new Error("Failed to create URI")
+    }
+
+    const userAgentOptions: UserAgentOptions = {
+      uri: uri,
+      displayName: displayName,
+      authorizationPassword: authorizationPassword,
+      authorizationUsername: authorizationUsername,
+      noAnswerTimeout: noAnswerTimeout,
+      transportOptions: transportOptions,
+      contactParams: contactParams,
       delegate: {
-        onCallReceived: async () => {
-          console.log("onCallReceived Incoming Call!");
+        onInvite: async (invitation: Invitation) => {
+          setInvitation(invitation)
+          setSession(invitation)
           startRingTone()
-          // 來電畫面
-        },
-        onCallCreated: async () => {
-          stopRingBackTone()
-          // 通話中畫面
         }
-      },
-      media: {
-        constraints: {
-          audio: true,
-          video: true,
-        },
-        remote: {
-          audio: audioRef.current,
-        },
-      },
-      userAgentOptions: {
-        authorizationPassword,
-        authorizationUsername,
-        noAnswerTimeout
       }
     }
-    simpleUserRef.current = new Web.SimpleUser(webSocketServer, simpleUserOptions)
+    userAgentRef.current = new UserAgent(userAgentOptions)
+
+    /*
+    * Create a Registerer to register user agent
+    */
+    const registererOptions: RegistererOptions = {
+      expires: 300, //Default value is 600
+    };
+    registererRef.current = new Registerer(userAgentRef.current, registererOptions);
   }, [])
 
   const handleConnect = async () => {
-    if (!simpleUserRef.current) return
+    if (!userAgentRef.current || userAgentRef.current.isConnected()) return
 
     try {
-      await simpleUserRef.current.connect()
-      console.log("Connected")
-      await simpleUserRef.current.register()//registererOptions,registererRegisterOptions
-      console.log("Registered");
+      console.log("連線中...");
+      await userAgentRef.current.start()
+      if (userAgentRef.current.isConnected()) console.log("已連線");
     } catch (error) {
-      console.error(`[${simpleUserRef.current!.id}] failed to connect`);
+      console.error(`[${userAgentRef.current!.instanceId}] failed to connect`);
       console.error(error);
       alert("Failed to connect.\n" + error);
     }
   }
 
-  const handleDisconnect = async () => {
-    if (!simpleUserRef.current) return
+  const handleLogin = async () => {
+    if (!registererRef.current) return
 
     try {
-      await simpleUserRef.current.unregister()
-      await simpleUserRef.current.disconnect()//registererUnregisterOptions
-      console.log("Disconnected");
+      await registererRef.current.register()
+      console.log("已註冊");
     } catch (error) {
-      console.error(`[${simpleUserRef.current!.id}] failed to disconnect`);
+      console.error(`[${userAgentRef.current!.instanceId}] failed to register`);
       console.error(error);
-      alert("Failed to disconnect.\n" + error);
+      alert("Failed to register.\n" + error);
     }
   }
 
-  const handleCall = async () => {
-    if (!simpleUserRef.current) return
+  const handleLogout = async () => {
+    console.log("取消註冊中...");
+    if (!registererRef.current) return
 
     try {
-      await simpleUserRef.current.call(destination, { inviteWithoutSdp: false })
-      startRingBackTone()
+      await registererRef.current.unregister()
+      console.log("已取消註冊");
     } catch (error) {
-      console.error(`[${simpleUserRef.current!.id}] failed to place call`);
+      console.error(`[${userAgentRef.current!.instanceId}] failed to unregister`);
+      console.error(error);
+      alert("Failed to unregister.\n" + error);
+    }
+  }
+
+  // const handleDisconnect = async () => {
+  //   console.log("取消連線中...");
+  //   if (!userAgentRef.current) return
+
+  //   try {
+  //     await userAgentRef.current.stop()
+  //     console.log("已取消連線");
+  //   } catch (error) {
+  //     console.error(`[${userAgentRef.current!.instanceId}] failed to disconnect`);
+  //     console.error(error);
+  //     alert("Failed to disconnect.\n" + error);
+  //   }
+  // }
+
+  // const remoteMedia = () => {
+  //   const remoteStream = new MediaStream();
+  //   function setupRemoteMedia(session: Session) {
+  //     if(!session) 
+  //     session.sessionDescriptionHandler.peerConnection.getReceivers().forEach((receiver) => {
+  //       if (receiver.track) {
+  //         remoteStream.addTrack(receiver.track);
+  //       }
+  //     });
+  //     mediaElement.srcObject = remoteStream;
+  //     mediaElement.play();
+  //   }
+  // }
+
+  const handleAudioCall = async () => {
+    if (!userAgentRef.current) return
+    const target = UserAgent.makeURI(destination)
+    if (!target) return
+
+    try {
+      const inviter = new Inviter(userAgentRef.current, target)
+      await inviter.invite()
+      setSession(inviter)
+      // startRingBackTone()
+    } catch (error) {
+      console.error(`[${userAgentRef.current!.instanceId}] failed to place call`);
       console.error(error);
       alert("Failed to place call.\n" + error);
     }
   }
 
   const handleAnswer = async () => {
-    if (!simpleUserRef.current) return
-
+    if (!userAgentRef.current) return
     try {
-      await simpleUserRef.current.answer()
+      if (!invitation) return
+      const invitationAcceptOptions: InvitationAcceptOptions = {
+        sessionDescriptionHandlerOptions: {
+          constraints: {
+            audio: true,
+            video: false
+          }
+        }
+      }
+      await invitation.accept(invitationAcceptOptions)
       stopRingTone()
     } catch (error) {
-      console.error(`[${simpleUserRef.current!.id}] failed to answer call`);
+      console.error(`[${userAgentRef.current!.instanceId}] failed to answer call`);
       console.error(error);
       alert("Failed to answer call.\n" + error);
     }
   }
 
   const handleReject = async () => {
-    if (!simpleUserRef.current) return
-
+    if (!userAgentRef.current) return
     try {
-      await simpleUserRef.current.decline()
+      if (!invitation) return
+      await invitation.reject()
+      console.log("拒接");
       stopRingTone()
     } catch (error) {
-      console.error(`[${simpleUserRef.current!.id}] failed to reject call`);
+      console.error(`[${userAgentRef.current!.instanceId}] failed to reject call`);
       console.error(error);
       alert("Failed to reject call.\n" + error);
     }
   }
 
   const handleHangUp = async () => {
-    if (!simpleUserRef.current) return
+    if (!session) return
 
     try {
-      await simpleUserRef.current.hangup()
+      if (session.state === SessionState.Established) {
+        await session.bye();
+        console.log("Session HangUp:BYE")
+      }
+      // switch (session.state) {
+      //   case SessionState.Initial:
+      //   case SessionState.Establishing:
+      //   case SessionState.Established:
+          
+      //     break
+      //   case SessionState.Terminating:
+      //   case SessionState.Terminated:
+      //     // Cannot terminate a session that is already terminated
+      //     break
+      // }
     } catch (error) {
-      console.error(`[${simpleUserRef.current!.id}] failed to hangup call`);
+      console.error(`[${userAgentRef.current!.instanceId}] failed to hangup call`);
       console.error(error);
       alert("Failed to hangup call.\n" + error);
     }
@@ -170,8 +269,8 @@ function App() {
     }
   }
   const handleHold = () => {
-    if (!simpleUserRef.current) return
-    if (simpleUserRef.current.isHeld() == true) {
+    if (!userAgentRef.current) return
+    if (userAgentRef.current.isHeld() == true) {
       unHold()
       setIsHold(false)
     } else {
@@ -181,29 +280,29 @@ function App() {
   }
 
   const hold = async () => {
-    if (!simpleUserRef.current) return
+    if (!userAgentRef.current) return
     try {
-      await simpleUserRef.current.hold()
+      await userAgentRef.current.hold()
     } catch (error) {
-      console.error(`[${simpleUserRef.current!.id}] failed to hold call`);
+      console.error(`[${userAgentRef.current!.id}] failed to hold call`);
       console.error(error);
       alert("Failed to hold call.\n" + error);
     }
   }
 
   const unHold = async () => {
-    if (!simpleUserRef.current) return
+    if (!userAgentRef.current) return
     try {
-      await simpleUserRef.current.unhold()
+      await userAgentRef.current.unhold()
     } catch (error) {
-      console.error(`[${simpleUserRef.current!.id}] failed to unhold call`);
+      console.error(`[${userAgentRef.current!.id}] failed to unhold call`);
       console.error(error);
       alert("Failed to unhold call.\n" + error);
     }
   }
   const handleMute = () => {
-    if (!simpleUserRef.current) return
-    if (simpleUserRef.current.isMuted() == true) {
+    if (!userAgentRef.current) return
+    if (userAgentRef.current.isMuted() == true) {
       unMute()
       setIsMute(false)
     } else {
@@ -213,28 +312,28 @@ function App() {
   }
 
   const mute = () => {
-    if (!simpleUserRef.current) return
+    if (!userAgentRef.current) return
     try {
-      simpleUserRef.current.mute()
+      userAgentRef.current.mute()
     } catch (error) {
-      console.error(`[${simpleUserRef.current!.id}] failed to mute call`);
+      console.error(`[${userAgentRef.current!.id}] failed to mute call`);
       console.error(error);
       alert("Failed to mute call.\n" + error);
     }
   }
 
   const unMute = () => {
-    if (!simpleUserRef.current) return
+    if (!userAgentRef.current) return
     try {
-      simpleUserRef.current.unmute()
+      userAgentRef.current.unmute()
     } catch (error) {
-      console.error(`[${simpleUserRef.current!.id}] failed to unmute call`);
+      console.error(`[${userAgentRef.current!.id}] failed to unmute call`);
       console.error(error);
       alert("Failed to unmute call.\n" + error);
     }
   }
 
-  const displayKeypad = () => {
+  const handleDisplayKeypad = () => {
 
   }
 
@@ -260,19 +359,24 @@ function App() {
   return (
     <>
       <audio ref={audioRef}></audio>
-      <audio ref={ringToneRef} src={ringtone_file}> </audio>
-      <audio ref={ringBackToneRef} src={ringbacktone_file}> </audio>
+      <audio loop ref={ringToneRef} src={ringtone_file}> </audio>
+      <audio loop ref={ringBackToneRef} src={ringbacktone_file}> </audio>
       <audio ref={dtmfRef} src={dtmf_file}> </audio>
 
       <button onClick={handleConnect}>Connect</button>
-      <button onClick={handleDisconnect}>Disconnect</button>
-      <button onClick={handleCall}>Call</button>
+      {/* <button onClick={handleDisconnect}>Disconnect</button> */}
+      <button onClick={handleLogin}>Login</button>
+      <button onClick={handleLogout}>Logout</button>
+      <button onClick={handleAudioCall}>Audio Call</button>
       <button onClick={handleReject}>Reject</button>
-      <button onClick={handleAnswer}>Answer</button>
+      {
+        invitation ? <button onClick={handleAnswer}>Answer</button> : null
+      }
+
       <button onClick={handleHangUp}>Hang Up</button>
       <button onClick={handleHold}>{isHold ? 'UnHold' : 'Hold'}</button>
       <button onClick={handleMute}>{isMute ? 'UnMute' : 'Mute'}</button>
-      <button onClick={displayKeypad}>Keypad</button>
+      <button onClick={handleDisplayKeypad}>Keypad</button>
       <button onClick={handleDTMF("1")}>1</button>
       <button onClick={handleDTMF("2")}>2</button>
       <button onClick={handleDTMF("3")}>3</button>
