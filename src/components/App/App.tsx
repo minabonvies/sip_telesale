@@ -1,8 +1,10 @@
 import styled from "@emotion/styled"
 import useInputKeys from "@/hooks/useInputKeys"
 import KeyPad from "../KeyPad"
+import { useBonTalk } from "@/Provider/BonTalkProvider"
 
 export default function App() {
+  const bonTalk = useBonTalk()
   const { inputKeys, enterKey } = useInputKeys()
 
   const handleKeyPress = (key: string) => {
@@ -11,6 +13,13 @@ export default function App() {
 
   return (
     <>
+      <button
+        onClick={() => {
+          bonTalk?.togglePanel()
+        }}
+      >
+        Close
+      </button>
       <AppContainer>
         <h2>{inputKeys}</h2>
         <KeyPad onKeyPress={handleKeyPress} />

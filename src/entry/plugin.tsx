@@ -1,8 +1,8 @@
 import App from "@/components/App"
 import ReactDOM from "react-dom/client"
 import BonTalkProvider from "@/Provider/BonTalkProvider"
-import "./index.css"
 import "./normalize.css"
+import "./index.css"
 
 export default class BonTalk {
   rootId = "_bon_sip_phone_root"

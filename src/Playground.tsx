@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState } from "react"
 import {
   Invitation,
   Inviter,
@@ -11,13 +11,11 @@ import {
   UserAgent,
   UserAgentOptions,
   InvitationAcceptOptions,
-  Transport
-} from "sip.js";
-import './App.css'
-import ringtone_file from './assets/sounds-from-sipml/ringtone.wav';
-import ringbacktone_file from './assets/sounds-from-sipml/ringbacktone.wav';
-import dtmf_file from './assets/sounds-from-sipml/dtmf.wav';
-
+  Transport,
+} from "sip.js"
+import ringtone_file from "./assets/sounds-from-sipml/ringtone.wav"
+import ringbacktone_file from "./assets/sounds-from-sipml/ringbacktone.wav"
+import dtmf_file from "./assets/sounds-from-sipml/dtmf.wav"
 
 /* transportOptions */
 const webSocketServer = "wss://demo.sip.telesale.org:7443/ws"
@@ -30,15 +28,14 @@ const displayName = "3002 Mina"
 const noAnswerTimeout = 12 // optional
 const transportOptions = {
   server: webSocketServer,
-  traceSip: false
+  traceSip: false,
 }
-const contactParams = { "transport": "wss" }
+const contactParams = { transport: "wss" }
 
 /* inviteOption */
 const destination = "sip:3001@demo.sip.telesale.org"
 
-
-function App() {
+export default function Playground() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const ringToneRef = useRef<HTMLAudioElement | null>(null)
   const ringBackToneRef = useRef<HTMLAudioElement | null>(null)
@@ -51,12 +48,11 @@ function App() {
   const [invitation, setInvitation] = useState<Invitation | null>(null)
   const [session, setSession] = useState<Session | null>(null)
 
-
   useEffect(() => {
     if (!audioRef.current) return
     /*
-    * Create a user agent
-    */
+     * Create a user agent
+     */
     const uri = UserAgent.makeURI(agentUri)
     if (!uri) {
       throw new Error("Failed to create URI")
@@ -75,31 +71,31 @@ function App() {
           setInvitation(invitation)
           setSession(invitation)
           startRingTone()
-        }
-      }
+        },
+      },
     }
     userAgentRef.current = new UserAgent(userAgentOptions)
 
     /*
-    * Create a Registerer to register user agent
-    */
+     * Create a Registerer to register user agent
+     */
     const registererOptions: RegistererOptions = {
       expires: 300, //Default value is 600
-    };
-    registererRef.current = new Registerer(userAgentRef.current, registererOptions);
+    }
+    registererRef.current = new Registerer(userAgentRef.current, registererOptions)
   }, [])
 
   const handleConnect = async () => {
     if (!userAgentRef.current || userAgentRef.current.isConnected()) return
 
     try {
-      console.log("連線中...");
+      console.log("連線中...")
       await userAgentRef.current.start()
-      if (userAgentRef.current.isConnected()) console.log("已連線");
+      if (userAgentRef.current.isConnected()) console.log("已連線")
     } catch (error) {
-      console.error(`[${userAgentRef.current!.instanceId}] failed to connect`);
-      console.error(error);
-      alert("Failed to connect.\n" + error);
+      console.error(`[${userAgentRef.current!.instanceId}] failed to connect`)
+      console.error(error)
+      alert("Failed to connect.\n" + error)
     }
   }
 
@@ -108,25 +104,25 @@ function App() {
 
     try {
       await registererRef.current.register()
-      console.log("已註冊");
+      console.log("已註冊")
     } catch (error) {
-      console.error(`[${userAgentRef.current!.instanceId}] failed to register`);
-      console.error(error);
-      alert("Failed to register.\n" + error);
+      console.error(`[${userAgentRef.current!.instanceId}] failed to register`)
+      console.error(error)
+      alert("Failed to register.\n" + error)
     }
   }
 
   const handleLogout = async () => {
-    console.log("取消註冊中...");
+    console.log("取消註冊中...")
     if (!registererRef.current) return
 
     try {
       await registererRef.current.unregister()
-      console.log("已取消註冊");
+      console.log("已取消註冊")
     } catch (error) {
-      console.error(`[${userAgentRef.current!.instanceId}] failed to unregister`);
-      console.error(error);
-      alert("Failed to unregister.\n" + error);
+      console.error(`[${userAgentRef.current!.instanceId}] failed to unregister`)
+      console.error(error)
+      alert("Failed to unregister.\n" + error)
     }
   }
 
@@ -147,7 +143,7 @@ function App() {
   // const remoteMedia = () => {
   //   const remoteStream = new MediaStream();
   //   function setupRemoteMedia(session: Session) {
-  //     if(!session) 
+  //     if(!session)
   //     session.sessionDescriptionHandler.peerConnection.getReceivers().forEach((receiver) => {
   //       if (receiver.track) {
   //         remoteStream.addTrack(receiver.track);
@@ -169,9 +165,9 @@ function App() {
       setSession(inviter)
       // startRingBackTone()
     } catch (error) {
-      console.error(`[${userAgentRef.current!.instanceId}] failed to place call`);
-      console.error(error);
-      alert("Failed to place call.\n" + error);
+      console.error(`[${userAgentRef.current!.instanceId}] failed to place call`)
+      console.error(error)
+      alert("Failed to place call.\n" + error)
     }
   }
 
@@ -183,16 +179,16 @@ function App() {
         sessionDescriptionHandlerOptions: {
           constraints: {
             audio: true,
-            video: false
-          }
-        }
+            video: false,
+          },
+        },
       }
       await invitation.accept(invitationAcceptOptions)
       stopRingTone()
     } catch (error) {
-      console.error(`[${userAgentRef.current!.instanceId}] failed to answer call`);
-      console.error(error);
-      alert("Failed to answer call.\n" + error);
+      console.error(`[${userAgentRef.current!.instanceId}] failed to answer call`)
+      console.error(error)
+      alert("Failed to answer call.\n" + error)
     }
   }
 
@@ -201,12 +197,12 @@ function App() {
     try {
       if (!invitation) return
       await invitation.reject()
-      console.log("拒接");
+      console.log("拒接")
       stopRingTone()
     } catch (error) {
-      console.error(`[${userAgentRef.current!.instanceId}] failed to reject call`);
-      console.error(error);
-      alert("Failed to reject call.\n" + error);
+      console.error(`[${userAgentRef.current!.instanceId}] failed to reject call`)
+      console.error(error)
+      alert("Failed to reject call.\n" + error)
     }
   }
 
@@ -215,14 +211,14 @@ function App() {
 
     try {
       if (session.state === SessionState.Established) {
-        await session.bye();
+        await session.bye()
         console.log("Session HangUp:BYE")
       }
       // switch (session.state) {
       //   case SessionState.Initial:
       //   case SessionState.Establishing:
       //   case SessionState.Established:
-          
+
       //     break
       //   case SessionState.Terminating:
       //   case SessionState.Terminated:
@@ -230,42 +226,46 @@ function App() {
       //     break
       // }
     } catch (error) {
-      console.error(`[${userAgentRef.current!.instanceId}] failed to hangup call`);
-      console.error(error);
-      alert("Failed to hangup call.\n" + error);
+      console.error(`[${userAgentRef.current!.instanceId}] failed to hangup call`)
+      console.error(error)
+      alert("Failed to hangup call.\n" + error)
     }
   }
 
   const startRingTone = () => {
     if (!ringToneRef.current) return
 
-    try { ringToneRef.current.play(); }
-    catch (e) {
-      console.log(e);
+    try {
+      ringToneRef.current.play()
+    } catch (e) {
+      console.log(e)
     }
   }
   const stopRingTone = () => {
     if (!ringToneRef.current) return
 
-    try { ringToneRef.current.pause(); }
-    catch (e) {
-      console.log(e);
+    try {
+      ringToneRef.current.pause()
+    } catch (e) {
+      console.log(e)
     }
   }
   const startRingBackTone = () => {
     if (!ringBackToneRef.current) return
 
-    try { ringBackToneRef.current.play(); }
-    catch (e) {
-      console.log(e);
+    try {
+      ringBackToneRef.current.play()
+    } catch (e) {
+      console.log(e)
     }
   }
   const stopRingBackTone = () => {
     if (!ringBackToneRef.current) return
 
-    try { ringBackToneRef.current.pause(); }
-    catch (e) {
-      console.log(e);
+    try {
+      ringBackToneRef.current.pause()
+    } catch (e) {
+      console.log(e)
     }
   }
   const handleHold = () => {
@@ -284,9 +284,9 @@ function App() {
     try {
       await userAgentRef.current.hold()
     } catch (error) {
-      console.error(`[${userAgentRef.current!.id}] failed to hold call`);
-      console.error(error);
-      alert("Failed to hold call.\n" + error);
+      console.error(`[${userAgentRef.current!.id}] failed to hold call`)
+      console.error(error)
+      alert("Failed to hold call.\n" + error)
     }
   }
 
@@ -295,9 +295,9 @@ function App() {
     try {
       await userAgentRef.current.unhold()
     } catch (error) {
-      console.error(`[${userAgentRef.current!.id}] failed to unhold call`);
-      console.error(error);
-      alert("Failed to unhold call.\n" + error);
+      console.error(`[${userAgentRef.current!.id}] failed to unhold call`)
+      console.error(error)
+      alert("Failed to unhold call.\n" + error)
     }
   }
   const handleMute = () => {
@@ -316,9 +316,9 @@ function App() {
     try {
       userAgentRef.current.mute()
     } catch (error) {
-      console.error(`[${userAgentRef.current!.id}] failed to mute call`);
-      console.error(error);
-      alert("Failed to mute call.\n" + error);
+      console.error(`[${userAgentRef.current!.id}] failed to mute call`)
+      console.error(error)
+      alert("Failed to mute call.\n" + error)
     }
   }
 
@@ -327,21 +327,17 @@ function App() {
     try {
       userAgentRef.current.unmute()
     } catch (error) {
-      console.error(`[${userAgentRef.current!.id}] failed to unmute call`);
-      console.error(error);
-      alert("Failed to unmute call.\n" + error);
+      console.error(`[${userAgentRef.current!.id}] failed to unmute call`)
+      console.error(error)
+      alert("Failed to unmute call.\n" + error)
     }
   }
 
-  const handleDisplayKeypad = () => {
-
-  }
+  const handleDisplayKeypad = () => {}
 
   const handleDTMF = (tone: string) => async () => {
     // setTone(t => t + tone)
     // console.log(tone);
-
-
     // if (!simpleUserRef.current) return
     // try {
     //   await simpleUserRef.current.sendDTMF(tone)
@@ -352,16 +348,21 @@ function App() {
     // }
     // console.log(tone)
     // setTimeout(() => {
-
     // }, timeout);
   }
 
   return (
-    <>
+    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", padding: "24px" }}>
       <audio ref={audioRef}></audio>
-      <audio loop ref={ringToneRef} src={ringtone_file}> </audio>
-      <audio loop ref={ringBackToneRef} src={ringbacktone_file}> </audio>
-      <audio ref={dtmfRef} src={dtmf_file}> </audio>
+      <audio loop ref={ringToneRef} src={ringtone_file}>
+        {" "}
+      </audio>
+      <audio loop ref={ringBackToneRef} src={ringbacktone_file}>
+        {" "}
+      </audio>
+      <audio ref={dtmfRef} src={dtmf_file}>
+        {" "}
+      </audio>
 
       <button onClick={handleConnect}>Connect</button>
       {/* <button onClick={handleDisconnect}>Disconnect</button> */}
@@ -369,13 +370,11 @@ function App() {
       <button onClick={handleLogout}>Logout</button>
       <button onClick={handleAudioCall}>Audio Call</button>
       <button onClick={handleReject}>Reject</button>
-      {
-        invitation ? <button onClick={handleAnswer}>Answer</button> : null
-      }
+      {invitation ? <button onClick={handleAnswer}>Answer</button> : null}
 
       <button onClick={handleHangUp}>Hang Up</button>
-      <button onClick={handleHold}>{isHold ? 'UnHold' : 'Hold'}</button>
-      <button onClick={handleMute}>{isMute ? 'UnMute' : 'Mute'}</button>
+      <button onClick={handleHold}>{isHold ? "UnHold" : "Hold"}</button>
+      <button onClick={handleMute}>{isMute ? "UnMute" : "Mute"}</button>
       <button onClick={handleDisplayKeypad}>Keypad</button>
       <button onClick={handleDTMF("1")}>1</button>
       <button onClick={handleDTMF("2")}>2</button>
@@ -390,8 +389,6 @@ function App() {
       <button onClick={handleDTMF("*")}>*</button>
       <button onClick={handleDTMF("#")}>#</button>
       {/* <span>{tone.toString()}</span> */}
-    </>
+    </div>
   )
 }
-
-export default App
