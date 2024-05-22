@@ -11,7 +11,7 @@ import {
     UserAgent,
     UserAgentOptions,
     InvitationAcceptOptions,
-    Transport,
+    Transport, InviterInviteOptions, IncomingResponse
 } from 'sip.js'
 
 /* transportOptions */
@@ -37,9 +37,12 @@ export default function useUA() {
     const ringToneRef = useRef<HTMLAudioElement | null>(null)
     const ringBackToneRef = useRef<HTMLAudioElement | null>(null)
     const dtmfRef = useRef<HTMLAudioElement | null>(null)
+
     const userAgentRef = useRef<UserAgent | null>(null)
     const registererRef = useRef<Registerer | null>(null)
-    const [invitation, setInvitation] = useState<Invitation | null>(null)
+    const inviterRef = useRef<Inviter | null>(null)
+    const invitationRef = useRef<Invitation | null>(null)
+    // const [invitation, setInvitation] = useState<Invitation | null>(null)
     const [session, setSession] = useState<Session | null>(null)
 
     useEffect(() => {
@@ -47,7 +50,7 @@ export default function useUA() {
         if (!uri) {
             throw new Error("Failed to create URI")
         }
-    
+
         const userAgentOptions: UserAgentOptions = {
             uri: uri,
             displayName: displayName,
@@ -58,19 +61,21 @@ export default function useUA() {
             contactParams: contactParams,
             delegate: {
                 onInvite: async (invitation: Invitation) => {
-                    setInvitation(invitation)
-                    setSession(invitation)
+                    invitationRef.current = invitation
+                    // setInvitation(invitation)
+                    // setSession(invitation)
                     startRingTone()
                 },
+
             },
         }
         userAgentRef.current = new UserAgent(userAgentOptions)
-    
+
         const registererOptions: RegistererOptions = {
             expires: 300, //Default value is 600
         }
         registererRef.current = new Registerer(userAgentRef.current, registererOptions)
-     },[])
+    }, [])
 
     const connect = async () => {
         if (!userAgentRef.current || userAgentRef.current.isConnected()) return
@@ -119,12 +124,66 @@ export default function useUA() {
         if (!target) return
 
         try {
-            const inviter = new Inviter(userAgentRef.current, target)
-            await inviter.invite()
-            setSession(inviter)
+            const inviteOptions: InviterInviteOptions = {
+                requestDelegate: {
+                    onAccept: (response) => {
+                        console.log('onAccept');
+                        // stopRingBackTone()
+                    },
+                    onProgress: () => {
+                        console.log('onProgress');
+
+                    },
+                    onReject: () => {
+                        console.log('onReject');
+                        // stopRingBackTone()
+                    },
+                    onRedirect: () => {
+                        console.log('onRedirect');
+
+                    },
+                    onTrying: () => {
+                        console.log('onTrying');
+
+                    }
+                }
+            }
+            inviterRef.current = new Inviter(userAgentRef.current, target)
+            inviterRef.current.stateChange.addListener((state: SessionState) => {
+                console.log(`Session state changed to ${state}`);
+                switch (state) {
+                    case SessionState.Initial:
+                        console.log("Initial");
+
+                        break;
+                    case SessionState.Establishing:
+                        console.log("Establishing");
+
+                        break;
+                    case SessionState.Established:
+                        // setupRemoteMedia(inviter);
+                        console.log("Established");
+
+                        break;
+                    case SessionState.Terminating:
+                        console.log("Terminating");
+                        break
+                    // fall through
+                    case SessionState.Terminated:
+                        console.log("Terminated");
+
+                        // cleanupMedia();
+                        break;
+                    default:
+                        throw new Error("Unknown session state.");
+                }
+            });
+            await inviterRef.current.invite(inviteOptions)
+            console.log("撥出電話中...");
             // startRingBackTone()
+
         } catch (error) {
-            // console.error(`[${userAgentRef.current!.instanceId}] failed to place call`)
+            console.error(`[${userAgentRef.current!.instanceId}] failed to place call`)
             console.error(error)
             alert("Failed to place call.\n" + error)
         }
@@ -133,7 +192,7 @@ export default function useUA() {
     const answerCall = async () => {
         if (!userAgentRef.current) return
         try {
-            if (!invitation) return
+            if (!invitationRef.current) return
             const invitationAcceptOptions: InvitationAcceptOptions = {
                 sessionDescriptionHandlerOptions: {
                     constraints: {
@@ -142,8 +201,9 @@ export default function useUA() {
                     },
                 },
             }
-            await invitation.accept(invitationAcceptOptions)
+            await invitationRef.current.accept(invitationAcceptOptions)
             stopRingTone()
+            console.log("已接聽電話");
         } catch (error) {
             console.error(`[${userAgentRef.current!.instanceId}] failed to answer call`)
             console.error(error)
@@ -154,8 +214,8 @@ export default function useUA() {
     const rejectCall = async () => {
         if (!userAgentRef.current) return
         try {
-            if (!invitation) return
-            await invitation.reject()
+            if (!invitationRef.current) return
+            await invitationRef.current.reject()
             console.log("拒接")
             stopRingTone()
         } catch (error) {
@@ -166,12 +226,17 @@ export default function useUA() {
     }
 
     const hangUpCall = async () => {
-        if (!session) return
-
         try {
-            if (session.state === SessionState.Established) {
-                await session.bye()
-                console.log("Session HangUp:BYE")
+            if (inviterRef.current?.state === SessionState.Established) {
+                await inviterRef.current.bye()
+                await inviterRef.current.dispose()
+                console.log("Outgoing Call HangUp : BYE()")
+            }
+
+            if (invitationRef.current?.state === SessionState.Established) {
+                await invitationRef.current.bye()
+                await invitationRef.current.dispose()
+                console.log("Ingoing Call HangUp : BYE()");
             }
             // switch (session.state) {
             //   case SessionState.Initial:
@@ -241,8 +306,22 @@ export default function useUA() {
         }
     }
 
+    const hold = async () => {
+        try {
+            // if (inviterRef.current?.state === SessionState.Established) {
+            //     await inviterRef.current?.invite()
+            // }
+
+            // await invitationRef.current?.invite()
+        } catch (error) {
+            console.error(`[${userAgentRef.current!.id}] failed to hold call`)
+            console.error(error)
+            alert("Failed to hold call.\n" + error)
+        }
+    }
+
 
     return {
-        audioRef, ringToneRef, ringBackToneRef, dtmfRef, userAgentRef, connect, login, logout, audioCall,answerCall,rejectCall,hangUpCall,invitation
+        audioRef, ringToneRef, ringBackToneRef, dtmfRef, userAgentRef, connect, login, logout, audioCall, answerCall, rejectCall, hangUpCall, invitationRef
     }
 }

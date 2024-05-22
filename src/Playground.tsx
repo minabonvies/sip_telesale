@@ -6,7 +6,7 @@ import useUA from "./hooks/useUA/index"
 
 export default function Playground() {
 
-  const { audioRef, ringToneRef, ringBackToneRef, dtmfRef, userAgentRef, connect, login, logout, audioCall, answerCall, rejectCall, hangUpCall, invitation } = useUA()
+  const { audioRef, ringToneRef, ringBackToneRef, dtmfRef, userAgentRef, connect, login, logout, audioCall, answerCall, rejectCall, hangUpCall, invitationRef } = useUA()
 
   const [isHold, setIsHold] = useState(false)
   const [isMute, setIsMute] = useState(false)
@@ -134,8 +134,8 @@ export default function Playground() {
       <button onClick={handleLogin}>Login</button>
       <button onClick={handleLogout}>Logout</button>
 
-      {invitation ? <button onClick={handleAnswer}>Answer</button> : null}
-      {invitation ? <button onClick={handleReject}>Reject</button> : null}
+      {invitationRef ? <button onClick={handleAnswer}>Answer</button> : null}
+      {invitationRef ? <button onClick={handleReject}>Reject</button> : null}
 
       <button onClick={handleAudioCall}>Audio Call</button>
       <button onClick={handleHangUp}>Hang Up</button>
