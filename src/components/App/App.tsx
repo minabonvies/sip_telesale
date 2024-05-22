@@ -2,6 +2,13 @@ import styled from "@emotion/styled"
 import useInputKeys from "@/hooks/useInputKeys"
 import KeyPad from "../KeyPad"
 
+import viteSvg from "/vite.svg"
+import testSvg from "@/assets/test.svg"
+import dtmf from "@/assets/sounds/dtmf.wav"
+import ringtone from "@/assets/sounds/ringtone.wav"
+
+console.log(dtmf)
+
 export default function App() {
   const { inputKeys, enterKey } = useInputKeys()
 
@@ -12,6 +19,18 @@ export default function App() {
   return (
     <>
       <AppContainer>
+        <img src={viteSvg} alt="Vite Logo" />
+        <img src={testSvg} alt="Test Logo" />
+        <audio controls>
+          <source src={dtmf} type="audio/wav" />
+        </audio>
+        <button
+          onClick={() => {
+            bonTalk?.togglePanel()
+          }}
+        >
+          Close
+        </button>
         <h2>{inputKeys}</h2>
         <KeyPad onKeyPress={handleKeyPress} />
       </AppContainer>
