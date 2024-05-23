@@ -6,7 +6,7 @@ import useUA from "./hooks/useUA/index"
 
 export default function Playground() {
 
-  const { audioRef, userAgentRef, connect, login, logout, audioCall, answerCall, rejectCall, hangUpCall, invitationRef, ringToneRef, mute, unMute } = useUA()
+  const { audioRef, ringToneRef, ringBackToneRef, dtmfRef, userAgentRef, connect, login, logout, audioCall, answerCall, rejectCall, hangUpCall, invitationRef } = useUA()
 
   const [isHold, setIsHold] = useState(false)
   const [isMute, setIsMute] = useState(false)
@@ -73,12 +73,34 @@ export default function Playground() {
   }
   const handleMute = () => {
     if (!userAgentRef.current) return
-    if (isMute == true) {
+    if (userAgentRef.current.isMuted() == true) {
       unMute()
       setIsMute(false)
     } else {
       mute()
       setIsMute(true)
+    }
+  }
+
+  const mute = () => {
+    if (!userAgentRef.current) return
+    try {
+      userAgentRef.current.mute()
+    } catch (error) {
+      console.error(`[${userAgentRef.current!.id}] failed to mute call`)
+      console.error(error)
+      alert("Failed to mute call.\n" + error)
+    }
+  }
+
+  const unMute = () => {
+    if (!userAgentRef.current) return
+    try {
+      userAgentRef.current.unmute()
+    } catch (error) {
+      console.error(`[${userAgentRef.current!.id}] failed to unmute call`)
+      console.error(error)
+      alert("Failed to unmute call.\n" + error)
     }
   }
 
@@ -104,6 +126,8 @@ export default function Playground() {
     <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", padding: "24px" }}>
       <audio ref={audioRef}></audio>
       <audio loop ref={ringToneRef} src={ringtone_file}></audio>
+      <audio loop ref={ringBackToneRef} src={ringbacktone_file}></audio>
+      <audio ref={dtmfRef} src={dtmf_file}></audio>
 
       <button onClick={handleConnect}>Connect</button>
       {/* <button onClick={handleDisconnect}>Disconnect</button> */}
@@ -115,8 +139,7 @@ export default function Playground() {
 
       <button onClick={handleAudioCall}>Audio Call</button>
       <button onClick={handleHangUp}>Hang Up</button>
-      <button onClick={handleHold}>{isHold ? "繼續通話" : "保留"}
-      </button> <button onClick={handleMute}>{isMute ? "取消靜音" : "靜音"}</button>
+      <button onClick={handleHold}>{isHold ? "UnHold" : "Hold"}</button> <button onClick={handleMute}>{isMute ? "UnMute" : "Mute"}</button>
 
       {/* <button onClick={handleDisplayKeypad}>Keypad</button> */}
       <button onClick={handleDTMF("1")}>1</button>
