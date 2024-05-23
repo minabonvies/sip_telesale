@@ -1,327 +1,156 @@
-import { useEffect, useRef, useState } from "react";
-import {
-    Invitation,
-    Inviter,
-    InviterOptions,
-    Referral,
-    Registerer,
-    RegistererOptions,
-    Session,
-    SessionState,
-    UserAgent,
-    UserAgentOptions,
-    InvitationAcceptOptions,
-    Transport, InviterInviteOptions, IncomingResponse
-} from 'sip.js'
+import { useEffect, useRef, useState } from "react"
+import { Invitation, SessionState } from "sip.js"
+import { useBonTalk } from "@/Provider/BonTalkProvider"
+import BonTalk from "@/entry/plugin"
 
-/* transportOptions */
-const webSocketServer = "wss://demo.sip.telesale.org:7443/ws"
-
-/* userAgentOptions */
-const agentUri = "sip:3002@demo.sip.telesale.org"
-const authorizationUsername = "3002"
-const authorizationPassword = "42633506"
-const displayName = "3002 Mina"
-const noAnswerTimeout = 12 // optional
-const transportOptions = {
-    server: webSocketServer,
-    traceSip: false,
-}
-const contactParams = { transport: "wss" }
-
-/* inviteOption */
-const destination = "sip:3001@demo.sip.telesale.org"
-
+// should rename to useCall
 export default function useUA() {
-    const audioRef = useRef<HTMLAudioElement | null>(null)
-    const ringToneRef = useRef<HTMLAudioElement | null>(null)
-    const ringBackToneRef = useRef<HTMLAudioElement | null>(null)
-    const dtmfRef = useRef<HTMLAudioElement | null>(null)
+  const bonTalk = useBonTalk()
 
-    const userAgentRef = useRef<UserAgent | null>(null)
-    const registererRef = useRef<Registerer | null>(null)
-    const inviterRef = useRef<Inviter | null>(null)
-    const invitationRef = useRef<Invitation | null>(null)
-    // const [invitation, setInvitation] = useState<Invitation | null>(null)
-    const [session, setSession] = useState<Session | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const ringToneRef = useRef<HTMLAudioElement | null>(null)
+  const dtmfRef = useRef<HTMLAudioElement | null>(null)
 
-    useEffect(() => {
-        const uri = UserAgent.makeURI(agentUri)
-        if (!uri) {
-            throw new Error("Failed to create URI")
-        }
+  const invitationRef = useRef<Invitation | null>(null)
+  const [invitation, setInvitation] = useState<Invitation | null>(null)
 
-        const userAgentOptions: UserAgentOptions = {
-            uri: uri,
-            displayName: displayName,
-            authorizationPassword: authorizationPassword,
-            authorizationUsername: authorizationUsername,
-            noAnswerTimeout: noAnswerTimeout,
-            transportOptions: transportOptions,
-            contactParams: contactParams,
-            delegate: {
-                onInvite: async (invitation: Invitation) => {
-                    invitationRef.current = invitation
-                    // setInvitation(invitation)
-                    // setSession(invitation)
-                    startRingTone()
-                },
+  useEffect(() => {
+    if (!bonTalk) return
+    if (bonTalk.userAgentInstance?.isConnected && bonTalk.registererInstance?.state === "Registered") return
 
-            },
-        }
-        userAgentRef.current = new UserAgent(userAgentOptions)
+    async function _login() {
+      await bonTalk?.login()
 
-        const registererOptions: RegistererOptions = {
-            expires: 300, //Default value is 600
-        }
-        registererRef.current = new Registerer(userAgentRef.current, registererOptions)
-    }, [])
+      bonTalk?.addDelegate("onInvite", (invitation: Invitation) => {
+        startRingTone()
+        setInvitation(invitation)
 
-    const connect = async () => {
-        if (!userAgentRef.current || userAgentRef.current.isConnected()) return
+        invitation.stateChange.addListener((state: SessionState) => {
+          switch (state) {
+            case SessionState.Initial:
+              break
+            case SessionState.Establishing:
+              break
+            case SessionState.Established:
+              BonTalk.setupRemoteMedia(invitation, bonTalk?.audioElement)
 
-        try {
-            console.log("連線中...")
-            await userAgentRef.current.start()
-            if (userAgentRef.current.isConnected()) console.log("已連線")
-        } catch (error) {
-            console.error(`[${userAgentRef.current!.instanceId}] failed to connect`)
-            console.error(error)
-            alert("Failed to connect.\n" + error)
-        }
+              break
+            case SessionState.Terminating:
+            case SessionState.Terminated:
+              BonTalk.cleanupMedia(bonTalk?.audioElement)
+              stopRingTone()
+              break
+            default:
+              throw new Error("Unknown session state.")
+          }
+        })
+      })
     }
 
-    const login = async () => {
-        if (!registererRef.current) return
+    _login()
+  }, [])
 
-        try {
-            await registererRef.current.register()
-            console.log("已註冊")
-        } catch (error) {
-            console.error(`[${userAgentRef.current!.instanceId}] failed to register`)
-            console.error(error)
-            alert("Failed to register.\n" + error)
-        }
+  const audioCall = async (target: string) => {
+    if (!bonTalk) return
+    if (!target) return
+
+    try {
+      await bonTalk.audioCall(target)
+    } catch (error) {
+      console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to place call`)
+      console.error(error)
+      alert("Failed to place call.\n" + error)
     }
+  }
 
-    const logout = async () => {
-        console.log("取消註冊中...")
-        if (!registererRef.current) return
-
-        try {
-            await registererRef.current.unregister()
-            console.log("已取消註冊")
-        } catch (error) {
-            console.error(`[${userAgentRef.current!.instanceId}] failed to unregister`)
-            console.error(error)
-            alert("Failed to unregister.\n" + error)
-        }
+  const answerCall = async () => {
+    if (!bonTalk) return
+    if (!invitation) return
+    try {
+      await bonTalk.answerCall(invitation)
+      stopRingTone()
+      console.log("已接聽電話")
+    } catch (error) {
+      console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to answer call`)
+      console.error(error)
+      alert("Failed to answer call.\n" + error)
     }
+  }
 
-    const audioCall = async () => {
-        if (!userAgentRef.current) return
-        const target = UserAgent.makeURI(destination)
-        if (!target) return
-
-        try {
-            const inviteOptions: InviterInviteOptions = {
-                requestDelegate: {
-                    onAccept: (response) => {
-                        console.log('onAccept');
-                        // stopRingBackTone()
-                    },
-                    onProgress: () => {
-                        console.log('onProgress');
-
-                    },
-                    onReject: () => {
-                        console.log('onReject');
-                        // stopRingBackTone()
-                    },
-                    onRedirect: () => {
-                        console.log('onRedirect');
-
-                    },
-                    onTrying: () => {
-                        console.log('onTrying');
-
-                    }
-                }
-            }
-            inviterRef.current = new Inviter(userAgentRef.current, target)
-            inviterRef.current.stateChange.addListener((state: SessionState) => {
-                console.log(`Session state changed to ${state}`);
-                switch (state) {
-                    case SessionState.Initial:
-                        console.log("Initial");
-
-                        break;
-                    case SessionState.Establishing:
-                        console.log("Establishing");
-
-                        break;
-                    case SessionState.Established:
-                        // setupRemoteMedia(inviter);
-                        console.log("Established");
-
-                        break;
-                    case SessionState.Terminating:
-                        console.log("Terminating");
-                        break
-                    // fall through
-                    case SessionState.Terminated:
-                        console.log("Terminated");
-
-                        // cleanupMedia();
-                        break;
-                    default:
-                        throw new Error("Unknown session state.");
-                }
-            });
-            await inviterRef.current.invite(inviteOptions)
-            console.log("撥出電話中...");
-            // startRingBackTone()
-
-        } catch (error) {
-            console.error(`[${userAgentRef.current!.instanceId}] failed to place call`)
-            console.error(error)
-            alert("Failed to place call.\n" + error)
-        }
+  const rejectCall = async () => {
+    if (!bonTalk) return
+    if (!invitation) return
+    try {
+      await bonTalk.rejectCall(invitation)
+      stopRingTone()
+      console.log("拒接")
+    } catch (error) {
+      console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to reject call`)
+      console.error(error)
+      alert("Failed to reject call.\n" + error)
     }
+  }
 
-    const answerCall = async () => {
-        if (!userAgentRef.current) return
-        try {
-            if (!invitationRef.current) return
-            const invitationAcceptOptions: InvitationAcceptOptions = {
-                sessionDescriptionHandlerOptions: {
-                    constraints: {
-                        audio: true,
-                        video: false,
-                    },
-                },
-            }
-            await invitationRef.current.accept(invitationAcceptOptions)
-            stopRingTone()
-            console.log("已接聽電話");
-        } catch (error) {
-            console.error(`[${userAgentRef.current!.instanceId}] failed to answer call`)
-            console.error(error)
-            alert("Failed to answer call.\n" + error)
-        }
+  const hangupCall = async () => {
+    if (!bonTalk) return
+    try {
+      await bonTalk.hangupCall()
+    } catch (error) {
+      console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to hangup call`)
+      console.error(error)
+      alert("Failed to hangup call.\n" + error)
     }
+  }
 
-    const rejectCall = async () => {
-        if (!userAgentRef.current) return
-        try {
-            if (!invitationRef.current) return
-            await invitationRef.current.reject()
-            console.log("拒接")
-            stopRingTone()
-        } catch (error) {
-            console.error(`[${userAgentRef.current!.instanceId}] failed to reject call`)
-            console.error(error)
-            alert("Failed to reject call.\n" + error)
-        }
+  const startRingTone = () => {
+    if (!ringToneRef.current) return
+
+    try {
+      ringToneRef.current.play()
+    } catch (e) {
+      console.log(e)
     }
+  }
 
-    const hangUpCall = async () => {
-        try {
-            if (inviterRef.current?.state === SessionState.Established) {
-                await inviterRef.current.bye()
-                await inviterRef.current.dispose()
-                console.log("Outgoing Call HangUp : BYE()")
-            }
+  const stopRingTone = () => {
+    if (!ringToneRef.current) return
 
-            if (invitationRef.current?.state === SessionState.Established) {
-                await invitationRef.current.bye()
-                await invitationRef.current.dispose()
-                console.log("Ingoing Call HangUp : BYE()");
-            }
-            // switch (session.state) {
-            //   case SessionState.Initial:
-            //   case SessionState.Establishing:
-            //   case SessionState.Established:
-
-            //     break
-            //   case SessionState.Terminating:
-            //   case SessionState.Terminated:
-            //     // Cannot terminate a session that is already terminated
-            //     break
-            // }
-        } catch (error) {
-            console.error(`[${userAgentRef.current!.instanceId}] failed to hangup call`)
-            console.error(error)
-            alert("Failed to hangup call.\n" + error)
-        }
+    try {
+      ringToneRef.current.pause()
+    } catch (e) {
+      console.log(e)
     }
+  }
 
-    const startRingTone = () => {
-        if (!ringToneRef.current) return
-
-        try {
-            ringToneRef.current.play()
-        } catch (e) {
-            console.log(e)
-        }
+  const hold = async () => {
+    if (!bonTalk) return
+    try {
+      await bonTalk.hold()
+    } catch (error) {
+      console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to hold call`)
+      console.error(error)
+      alert("Failed to hold call.\n" + error)
     }
+  }
 
-    const stopRingTone = () => {
-        if (!ringToneRef.current) return
+  // const dtmfTone = () => {
+  //   if (!dtmfRef.current) return
+  //   try {
+  //     dtmfRef.current.play()
+  //   } catch (e) {
+  //     console.log(e)
+  //   }
+  // }
 
-        try {
-            ringToneRef.current.pause()
-        } catch (e) {
-            console.log(e)
-        }
-    }
-
-    const startRingBackTone = () => {
-        if (!ringBackToneRef.current) return
-
-        try {
-            ringBackToneRef.current.play()
-        } catch (e) {
-            console.log(e)
-        }
-    }
-
-    const stopRingBackTone = () => {
-        if (!ringBackToneRef.current) return
-
-        try {
-            ringBackToneRef.current.pause()
-        } catch (e) {
-            console.log(e)
-        }
-    }
-
-    const dtmfTone = () => {
-        if (!dtmfRef.current) return
-
-        try {
-            dtmfRef.current.play()
-        } catch (e) {
-            console.log(e);
-        }
-    }
-
-    const hold = async () => {
-        try {
-            // if (inviterRef.current?.state === SessionState.Established) {
-            //     await inviterRef.current?.invite()
-            // }
-
-            // await invitationRef.current?.invite()
-        } catch (error) {
-            console.error(`[${userAgentRef.current!.id}] failed to hold call`)
-            console.error(error)
-            alert("Failed to hold call.\n" + error)
-        }
-    }
-
-
-    return {
-        audioRef, ringToneRef, ringBackToneRef, dtmfRef, userAgentRef, connect, login, logout, audioCall, answerCall, rejectCall, hangUpCall, invitationRef
-    }
+  return {
+    audioRef,
+    ringToneRef,
+    dtmfRef,
+    audioCall,
+    answerCall,
+    rejectCall,
+    hangupCall,
+    holdCall: hold,
+    invitationRef,
+  }
 }
