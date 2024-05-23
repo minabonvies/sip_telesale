@@ -30,12 +30,12 @@ const transportOptions = {
 const contactParams = { transport: "wss" }
 
 /* inviteOption */
-const destination = "sip:3001@demo.sip.telesale.org"
+const destination = "sip:0900113080@demo.sip.telesale.org"
 
 export default function useUA() {
     const audioRef = useRef<HTMLAudioElement | null>(null)
     const ringToneRef = useRef<HTMLAudioElement | null>(null)
-    const ringBackToneRef = useRef<HTMLAudioElement | null>(null)
+    // const ringBackToneRef = useRef<HTMLAudioElement | null>(null)
     const dtmfRef = useRef<HTMLAudioElement | null>(null)
 
     const userAgentRef = useRef<UserAgent | null>(null)
@@ -62,11 +62,27 @@ export default function useUA() {
             delegate: {
                 onInvite: async (invitation: Invitation) => {
                     invitationRef.current = invitation
-                    // setInvitation(invitation)
-                    // setSession(invitation)
                     startRingTone()
+                    invitationRef.current.stateChange.addListener((state: SessionState) => {
+                        console.log(`Session state changed to ${state}`);
+                        switch (state) {
+                            case SessionState.Initial:
+                                break;
+                            case SessionState.Establishing:
+                                break;
+                            case SessionState.Established:
+                                console.log("Established");
+                                setupRemoteMedia(invitationRef.current)
+                                break;
+                            case SessionState.Terminating:
+                            case SessionState.Terminated:
+                                cleanupMedia();
+                                break;
+                            default:
+                                throw new Error("Unknown session state.");
+                        }
+                    })
                 },
-
             },
         }
         userAgentRef.current = new UserAgent(userAgentOptions)
@@ -122,86 +138,44 @@ export default function useUA() {
         if (!userAgentRef.current) return
         const target = UserAgent.makeURI(destination)
         if (!target) return
+        if (!inviterRef.current)
 
-        try {
-            const inviteOptions: InviterInviteOptions = {
-                requestDelegate: {
-                    onAccept: (response) => {
-                        console.log('onAccept');
-                        // stopRingBackTone()
-                    },
-                    onProgress: () => {
-                        console.log('onProgress');
-
-                    },
-                    onReject: () => {
-                        console.log('onReject');
-                        // stopRingBackTone()
-                    },
-                    onRedirect: () => {
-                        console.log('onRedirect');
-
-                    },
-                    onTrying: () => {
-                        console.log('onTrying');
-
+            try {
+                inviterRef.current = new Inviter(userAgentRef.current, target)
+                inviterRef.current.stateChange.addListener((state: SessionState) => {
+                    console.log(`Session state changed to ${state}`);
+                    switch (state) {
+                        case SessionState.Initial:
+                            break;
+                        case SessionState.Establishing:
+                            break;
+                        case SessionState.Established:
+                            setupRemoteMedia(inviterRef.current);
+                            break;
+                        case SessionState.Terminating:
+                            break
+                        // fall through
+                        case SessionState.Terminated:
+                            cleanupMedia();
+                            break;
+                        default:
+                            throw new Error("Unknown session state.");
                     }
-                }
+                });
+                await inviterRef.current.invite()
+                console.log("撥出電話中...");
+            } catch (error) {
+                console.error(`[${userAgentRef.current!.instanceId}] failed to place call`)
+                console.error(error)
+                alert("Failed to place call.\n" + error)
             }
-            inviterRef.current = new Inviter(userAgentRef.current, target)
-            inviterRef.current.stateChange.addListener((state: SessionState) => {
-                console.log(`Session state changed to ${state}`);
-                switch (state) {
-                    case SessionState.Initial:
-                        console.log("Initial");
-
-                        break;
-                    case SessionState.Establishing:
-                        console.log("Establishing");
-
-                        break;
-                    case SessionState.Established:
-                        // setupRemoteMedia(inviter);
-                        console.log("Established");
-
-                        break;
-                    case SessionState.Terminating:
-                        console.log("Terminating");
-                        break
-                    // fall through
-                    case SessionState.Terminated:
-                        console.log("Terminated");
-
-                        // cleanupMedia();
-                        break;
-                    default:
-                        throw new Error("Unknown session state.");
-                }
-            });
-            await inviterRef.current.invite(inviteOptions)
-            console.log("撥出電話中...");
-            // startRingBackTone()
-
-        } catch (error) {
-            console.error(`[${userAgentRef.current!.instanceId}] failed to place call`)
-            console.error(error)
-            alert("Failed to place call.\n" + error)
-        }
     }
 
     const answerCall = async () => {
         if (!userAgentRef.current) return
         try {
             if (!invitationRef.current) return
-            const invitationAcceptOptions: InvitationAcceptOptions = {
-                sessionDescriptionHandlerOptions: {
-                    constraints: {
-                        audio: true,
-                        video: false,
-                    },
-                },
-            }
-            await invitationRef.current.accept(invitationAcceptOptions)
+            await invitationRef.current.accept()
             stopRingTone()
             console.log("已接聽電話");
         } catch (error) {
@@ -216,8 +190,8 @@ export default function useUA() {
         try {
             if (!invitationRef.current) return
             await invitationRef.current.reject()
-            console.log("拒接")
             stopRingTone()
+            console.log("拒接")
         } catch (error) {
             console.error(`[${userAgentRef.current!.instanceId}] failed to reject call`)
             console.error(error)
@@ -256,56 +230,6 @@ export default function useUA() {
         }
     }
 
-    const startRingTone = () => {
-        if (!ringToneRef.current) return
-
-        try {
-            ringToneRef.current.play()
-        } catch (e) {
-            console.log(e)
-        }
-    }
-
-    const stopRingTone = () => {
-        if (!ringToneRef.current) return
-
-        try {
-            ringToneRef.current.pause()
-        } catch (e) {
-            console.log(e)
-        }
-    }
-
-    const startRingBackTone = () => {
-        if (!ringBackToneRef.current) return
-
-        try {
-            ringBackToneRef.current.play()
-        } catch (e) {
-            console.log(e)
-        }
-    }
-
-    const stopRingBackTone = () => {
-        if (!ringBackToneRef.current) return
-
-        try {
-            ringBackToneRef.current.pause()
-        } catch (e) {
-            console.log(e)
-        }
-    }
-
-    const dtmfTone = () => {
-        if (!dtmfRef.current) return
-
-        try {
-            dtmfRef.current.play()
-        } catch (e) {
-            console.log(e);
-        }
-    }
-
     const hold = async () => {
         try {
             // if (inviterRef.current?.state === SessionState.Established) {
@@ -320,8 +244,44 @@ export default function useUA() {
         }
     }
 
+    const setupRemoteMedia = (session: Session) => {
+        if (!audioRef.current) return
+        const remoteStream = new MediaStream();
+        session.sessionDescriptionHandler.peerConnection.getReceivers().forEach((receiver) => {
+            if (receiver.track) {
+                remoteStream.addTrack(receiver.track);
+            }
+        });
+        audioRef.current.srcObject = remoteStream;
+        audioRef.current.play();
+    }
+
+    const cleanupMedia = () => {
+        if (!audioRef.current) return
+        console.log("cleanupMedia");
+
+        audioRef.current.srcObject = null;
+        audioRef.current.pause();
+    }
+
+    const mute = () => {
+    }
+
+    const unMute = () => {
+    }
+
+    const startRingTone = () => {
+        if (!ringToneRef.current) return
+        ringToneRef.current.play()
+    }
+
+    const stopRingTone = () => {
+        if (!ringToneRef.current) return
+        ringToneRef.current.pause()
+    }
+
 
     return {
-        audioRef, ringToneRef, ringBackToneRef, dtmfRef, userAgentRef, connect, login, logout, audioCall, answerCall, rejectCall, hangUpCall, invitationRef
+        audioRef, userAgentRef, connect, login, logout, audioCall, answerCall, rejectCall, hangUpCall, invitationRef,ringToneRef,mute,unMute
     }
 }
