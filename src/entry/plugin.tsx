@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client"
 import BonTalkProvider from "@/Provider/BonTalkProvider"
 import "./normalize.css"
 import "./index.css"
-import { Invitation, InvitationAcceptOptions, Inviter, Registerer, Session, SessionState, UserAgent, UserAgentDelegate } from "sip.js"
+import { Invitation, InvitationAcceptOptions, Inviter, Registerer, Session, SessionState, UserAgent, UserAgentDelegate, SessionDescriptionHandlerOptions, SessionInviteOptions } from "sip.js"
 import BonTalkError from "@/utils/BonTalkError"
 
 export default class BonTalk {
@@ -277,9 +277,74 @@ export default class BonTalk {
 
   async hold() {
     const currentSession = this.sessions[this.currentSessionIndex]
-    if (currentSession.state === SessionState.Established) {
-      await currentSession.invite()
+    if (currentSession.isOnHold == true) {
+      console.log("Call is is already on hold:", this.currentSessionIndex);
+      return
     }
+    currentSession.isOnHold = true
+
+    if (currentSession.state === SessionState.Established) {
+      const options: SessionInviteOptions = {
+        requestDelegate: {
+          onAccept: () => {
+            if (currentSession && currentSession.sessionDescriptionHandler && currentSession.sessionDescriptionHandler.peerConnection) {
+              const pc = currentSession.sessionDescriptionHandler.peerConnection;
+              // Stop all the inbound streams
+              pc.getReceivers().forEach((RTCRtpReceiver) => {
+                if (RTCRtpReceiver.track) RTCRtpReceiver.track.enabled = false;
+              })
+              // Stop all the outbound streams (especially usefull for Conference Calls!!)
+              pc.getSenders().forEach(function (RTCRtpSender) {
+                // Mute Audio
+                if (RTCRtpSender.track && RTCRtpSender.track.kind == "audio") {
+                  if (RTCRtpSender.track.IsMixedTrack == true) {
+                    if (currentSession.data.AudioSourceTrack && currentSession.data.AudioSourceTrack.kind == "audio") {
+                      console.log("Muting Mixed Audio Track : " + currentSession.data.AudioSourceTrack.label);
+                      currentSession.data.AudioSourceTrack.enabled = false;
+                    }
+                  }
+                  console.log("Muting Audio Track : " + RTCRtpSender.track.label);
+                  RTCRtpSender.track.enabled = false;
+                }
+                // Stop Video
+                else if (RTCRtpSender.track && RTCRtpSender.track.kind == "video") {
+                  RTCRtpSender.track.enabled = false;
+                }
+              })
+            }
+            currentSession.isOnHold = true;
+            console.log("Call is is on hold:", this.currentSessionIndex);
+
+            // Log Hold
+            // if (!currentSession.data.hold) currentSession.data.hold = [];
+            // currentSession.data.hold.push({ event: "hold", eventTime: utcDateNow() });
+
+            // updateLineScroll(this.currentSessionIndex);
+          },
+          onReject: () => {
+
+          }
+        }
+      }
+      await currentSession.invite(options)
+    }
+  }
+
+  async sendDTMF(tone: string) {
+    const currentSession = this.sessions[this.currentSessionIndex]
+    const sessionInfoOptions = {
+      requestOptions: {
+        body: {
+          contentDisposition: "render",
+          contentType: "application/dtmf-relay",
+          content: `Signal=${tone}\r\nDuration=100`
+        }
+      }
+    }
+    console.log(tone);
+
+
+    await currentSession.info(sessionInfoOptions)
   }
 
   /**

@@ -7,13 +7,13 @@ import { useBonTalk } from "./Provider/BonTalkProvider"
 
 export default function Playground() {
   const bonTalk = useBonTalk()
-  const { audioRef, ringToneRef, dtmfRef, audioCall, answerCall, rejectCall, hangupCall, holdCall, invitationRef } = useUA()
+  const { audioRef, ringToneRef, dtmfRef, audioCall, answerCall, rejectCall, hangupCall, holdCall, invitationRef, sendDTMF } = useUA()
 
   const [isHold, setIsHold] = useState(false)
   // const [isMute, setIsMute] = useState(false)
 
   const handleAudioCall = async () => {
-    await audioCall("3001")
+    await audioCall("200")
   }
 
   const handleAnswer = async () => {
@@ -29,12 +29,20 @@ export default function Playground() {
   }
 
   const handleHold = async () => {
-    await holdCall()
     if (isHold) {
       setIsHold(false)
     } else {
+      await holdCall()
       setIsHold(true)
     }
+  }
+
+  const handleDTMF = (tone: string) => async () => {
+    await sendDTMF(tone)
+  }
+
+  const handleDisplayKeypad = () => {
+
   }
 
   return (
@@ -52,8 +60,8 @@ export default function Playground() {
       <button onClick={handleHangUp}>Hang Up</button>
       <button onClick={handleHold}>{isHold ? "UnHold" : "Hold"}</button>
       {/* <button onClick={handleMute}>{isMute ? "UnMute" : "Mute"}</button> */}
-      {/* <button onClick={handleDisplayKeypad}>Keypad</button> */}
-      {/* <button onClick={handleDTMF("1")}>1</button>
+      <button onClick={handleDisplayKeypad}>Keypad</button>
+      <button onClick={handleDTMF("1")}>1</button>
       <button onClick={handleDTMF("2")}>2</button>
       <button onClick={handleDTMF("3")}>3</button>
       <button onClick={handleDTMF("4")}>4</button>
@@ -64,7 +72,7 @@ export default function Playground() {
       <button onClick={handleDTMF("9")}>9</button>
       <button onClick={handleDTMF("0")}>0</button>
       <button onClick={handleDTMF("*")}>*</button>
-      <button onClick={handleDTMF("#")}>#</button> */}
+      <button onClick={handleDTMF("#")}>#</button>
       {/* <span>{tone.toString()}</span> */}
     </div>
   )

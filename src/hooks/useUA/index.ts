@@ -7,6 +7,7 @@ import BonTalk from "@/entry/plugin"
 export default function useUA() {
   const bonTalk = useBonTalk()
 
+  // TODO 評估是否移除
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const ringToneRef = useRef<HTMLAudioElement | null>(null)
   const dtmfRef = useRef<HTMLAudioElement | null>(null)
@@ -142,6 +143,17 @@ export default function useUA() {
   //   }
   // }
 
+  const sendDTMF = async (tone: string) => {
+    if (!bonTalk) return
+    try {
+      await bonTalk.sendDTMF(tone)
+    } catch (error) {
+      console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to send DTMF`)
+      console.error(error)
+      alert("Failed to send DTMF.\n" + error)
+    }
+  }
+
   return {
     audioRef,
     ringToneRef,
@@ -152,5 +164,6 @@ export default function useUA() {
     hangupCall,
     holdCall: hold,
     invitationRef,
+    sendDTMF
   }
 }
