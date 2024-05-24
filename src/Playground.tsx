@@ -7,13 +7,13 @@ import { useBonTalk } from "./Provider/BonTalkProvider"
 
 export default function Playground() {
   const bonTalk = useBonTalk()
-  const { audioRef, ringToneRef, dtmfRef, audioCall, answerCall, rejectCall, hangupCall, holdCall, invitationRef, sendDTMF } = useUA()
+  const { audioRef, ringToneRef, dtmfRef, audioCall, answerCall, rejectCall, hangupCall, holdCall, invitationRef, sendDTMF,setMute } = useUA()
 
   const [isHold, setIsHold] = useState(false)
-  // const [isMute, setIsMute] = useState(false)
+  const [isMute, setIsMute] = useState(false)
 
   const handleAudioCall = async () => {
-    await audioCall("200")
+    await audioCall("3001")
   }
 
   const handleAnswer = async () => {
@@ -34,6 +34,15 @@ export default function Playground() {
     } else {
       await holdCall()
       setIsHold(true)
+    }
+  }
+  const handleMute = () => {
+    if (isMute) {
+      setIsMute(false)
+      setMute(false)
+    } else {
+      setIsMute(true)
+      setMute(true)
     }
   }
 
@@ -59,7 +68,7 @@ export default function Playground() {
       <button onClick={handleAudioCall}>Audio Call</button>
       <button onClick={handleHangUp}>Hang Up</button>
       <button onClick={handleHold}>{isHold ? "UnHold" : "Hold"}</button>
-      {/* <button onClick={handleMute}>{isMute ? "UnMute" : "Mute"}</button> */}
+      <button onClick={handleMute}>{isMute ? "UnMute" : "Mute"}</button>
       <button onClick={handleDisplayKeypad}>Keypad</button>
       <button onClick={handleDTMF("1")}>1</button>
       <button onClick={handleDTMF("2")}>2</button>

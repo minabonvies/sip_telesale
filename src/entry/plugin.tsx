@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client"
 import BonTalkProvider from "@/Provider/BonTalkProvider"
 import "./normalize.css"
 import "./index.css"
-import { Invitation, InvitationAcceptOptions, Inviter, Registerer, Session, SessionState, UserAgent, UserAgentDelegate, SessionDescriptionHandlerOptions, SessionInviteOptions } from "sip.js"
+import { Invitation, InvitationAcceptOptions, Inviter, Registerer, Session, SessionState, UserAgent, UserAgentDelegate, SessionDescriptionHandler, SessionInviteOptions } from "sip.js"
 import BonTalkError from "@/utils/BonTalkError"
 
 export default class BonTalk {
@@ -219,23 +219,6 @@ export default class BonTalk {
     if (!audioElement) {
       throw new BonTalkError(`[bonTalk] audioElement with id ${this._audioElementId} not found`)
     }
-    // invitation.stateChange.addListener((state: SessionState) => {
-    //   switch (state) {
-    //     case SessionState.Initial:
-    //       break
-    //     case SessionState.Establishing:
-    //       break
-    //     case SessionState.Established:
-    //       BonTalk.setupRemoteMedia(invitation, audioElement as HTMLMediaElement)
-    //       break
-    //     case SessionState.Terminating:
-    //     case SessionState.Terminated:
-    //       BonTalk.cleanupMedia(audioElement as HTMLMediaElement)
-    //       break
-    //     default:
-    //       throw new Error("Unknown session state.")
-    //   }
-    // })
     await invitation.accept(invitationAcceptOptions)
     const sessionTotalCount = this.sessions.push(invitation)
     this.currentSessionIndex = sessionTotalCount - 1
@@ -330,8 +313,25 @@ export default class BonTalk {
     }
   }
 
+  /**
+   * Puts Session on mute.
+   * @param mute - Mute on if true, off if false.
+   */
+  toggleMicrophone(mute: boolean) {
+    const currentSession = this.sessions[this.currentSessionIndex].sessionDescriptionHandler.peerConnection //currentSession is Inviter or Invitation
+
+    currentSession.getLocalStreams().forEach(function (stream) {
+      stream.getAudioTracks().forEach(function (track) {
+        track.enabled = !mute        
+      });
+    });
+  }
+
   async sendDTMF(tone: string) {
     const currentSession = this.sessions[this.currentSessionIndex]
+    if (!currentSession) {
+      throw new BonTalkError("[bonTalk] session not initialized")
+    }
     const sessionInfoOptions = {
       requestOptions: {
         body: {
@@ -341,9 +341,6 @@ export default class BonTalk {
         }
       }
     }
-    console.log(tone);
-
-
     await currentSession.info(sessionInfoOptions)
   }
 

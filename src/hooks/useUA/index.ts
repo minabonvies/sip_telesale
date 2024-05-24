@@ -134,19 +134,25 @@ export default function useUA() {
     }
   }
 
-  // const dtmfTone = () => {
-  //   if (!dtmfRef.current) return
-  //   try {
-  //     dtmfRef.current.play()
-  //   } catch (e) {
-  //     console.log(e)
-  //   }
-  // }
+  const setMute = (mute:boolean) => {
+    if (!bonTalk) return
+    bonTalk.toggleMicrophone(mute);
+  }
+
+  const dtmfTone = () => {
+    if (!dtmfRef.current) return
+    try {
+      dtmfRef.current.play()
+    } catch (e) {
+      console.log(e)
+    }
+  }
 
   const sendDTMF = async (tone: string) => {
     if (!bonTalk) return
     try {
       await bonTalk.sendDTMF(tone)
+      dtmfTone()
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to send DTMF`)
       console.error(error)
@@ -164,6 +170,7 @@ export default function useUA() {
     hangupCall,
     holdCall: hold,
     invitationRef,
-    sendDTMF
+    sendDTMF,
+    setMute
   }
 }
