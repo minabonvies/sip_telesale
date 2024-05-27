@@ -315,7 +315,7 @@ export default class BonTalk {
     await currentSession.info(sessionInfoOptions)
   }
 
-  async blindTransfer(user:string) {
+  async blindTransfer(user: string) {
     const newTarget = UserAgent.makeURI(`sip:${user}@${this.domains[this.currentDomainIndex]}`);
     if (!newTarget) {
       throw new BonTalkError("[bonTalk] new target is not defined")
@@ -325,6 +325,50 @@ export default class BonTalk {
       throw new BonTalkError("[bonTalk] session not initialized")
     }
     currentSession.refer(newTarget)
+  }
+
+  async attendedTransfer(user: string) {
+    this.setHold(true)
+    if (!this.userAgent) {
+      throw new BonTalkError("[bonTalk] userAgent not initialized")
+    }
+    const newTarget = UserAgent.makeURI(`sip:${user}@${this.domains[this.currentDomainIndex]}`);
+    if (!newTarget) {
+      throw new BonTalkError("[bonTalk] new target is not defined")
+    }
+    const currentSession = this.sessions[this.currentSessionIndex]
+    if (!currentSession) {
+      throw new BonTalkError("[bonTalk] session not initialized")
+    }
+
+    const audioElement = document.getElementById(this._audioElementId)
+    if (!audioElement) {
+      throw new BonTalkError(`[bonTalk] audioElement with id ${this._audioElementId} not found`)
+    }
+
+    const replacementSession = new Inviter(this.userAgent, newTarget);
+    replacementSession.stateChange.addListener((state: SessionState) => {
+      switch (state) {
+        case SessionState.Initial:
+          break
+        case SessionState.Establishing:
+          break
+        case SessionState.Established:
+          BonTalk.setupRemoteMedia(replacementSession, audioElement as HTMLMediaElement)
+
+          break
+        case SessionState.Terminating:
+        case SessionState.Terminated:
+          BonTalk.cleanupMedia(audioElement as HTMLMediaElement)
+          break
+        default:
+          throw new Error("Unknown session state.")
+      }
+    })
+    await replacementSession.invite()
+    const sessionTotalCount = this.sessions.push(replacementSession)
+    this.currentSessionIndex = sessionTotalCount - 1
+    // currentSession.refer(replacementSession);
   }
 
   /**

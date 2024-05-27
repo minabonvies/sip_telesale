@@ -164,11 +164,21 @@ export default function useUA() {
     if (!bonTalk) return
     try {
       await bonTalk.blindTransfer(user)
-      dtmfTone()
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to blind transfer`)
       console.error(error)
       alert("Failed to blind transfer.\n" + error)
+    }
+  }
+
+  const attendedTransfer = async (user: string) => {
+    if (!bonTalk) return
+    try {
+      await bonTalk.attendedTransfer(user)
+    } catch (error) {
+      console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to attended transfer`)
+      console.error(error)
+      alert("Failed to attended transfer.\n" + error)
     }
   }
 
@@ -183,6 +193,6 @@ export default function useUA() {
     setHold,
     invitationRef,
     sendDTMF,
-    setMute,blindTransfer
+    setMute,blindTransfer,attendedTransfer
   }
 }
