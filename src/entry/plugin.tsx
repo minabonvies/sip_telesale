@@ -258,51 +258,22 @@ export default class BonTalk {
     this.currentSessionIndex = Math.min(this.currentSessionIndex, this.sessions.length - 1)
   }
 
-  async hold() {
+  async setHold(hold:boolean) {
     const currentSession = this.sessions[this.currentSessionIndex]
-    if (currentSession.isOnHold == true) {
-      console.log("Call is is already on hold:", this.currentSessionIndex);
-      return
-    }
-    currentSession.isOnHold = true
 
     if (currentSession.state === SessionState.Established) {
       const options: SessionInviteOptions = {
         requestDelegate: {
           onAccept: () => {
-            if (currentSession && currentSession.sessionDescriptionHandler && currentSession.sessionDescriptionHandler.peerConnection) {
-              const pc = currentSession.sessionDescriptionHandler.peerConnection;
-              // Stop all the inbound streams
-              pc.getReceivers().forEach((RTCRtpReceiver) => {
-                if (RTCRtpReceiver.track) RTCRtpReceiver.track.enabled = false;
-              })
-              // Stop all the outbound streams (especially usefull for Conference Calls!!)
-              pc.getSenders().forEach(function (RTCRtpSender) {
-                // Mute Audio
-                if (RTCRtpSender.track && RTCRtpSender.track.kind == "audio") {
-                  if (RTCRtpSender.track.IsMixedTrack == true) {
-                    if (currentSession.data.AudioSourceTrack && currentSession.data.AudioSourceTrack.kind == "audio") {
-                      console.log("Muting Mixed Audio Track : " + currentSession.data.AudioSourceTrack.label);
-                      currentSession.data.AudioSourceTrack.enabled = false;
-                    }
-                  }
-                  console.log("Muting Audio Track : " + RTCRtpSender.track.label);
-                  RTCRtpSender.track.enabled = false;
-                }
-                // Stop Video
-                else if (RTCRtpSender.track && RTCRtpSender.track.kind == "video") {
-                  RTCRtpSender.track.enabled = false;
-                }
-              })
-            }
-            currentSession.isOnHold = true;
-            console.log("Call is is on hold:", this.currentSessionIndex);
-
-            // Log Hold
-            // if (!currentSession.data.hold) currentSession.data.hold = [];
-            // currentSession.data.hold.push({ event: "hold", eventTime: utcDateNow() });
-
-            // updateLineScroll(this.currentSessionIndex);
+            const pc = currentSession.sessionDescriptionHandler!.peerConnection;
+            // Stop all the inbound streams
+            pc.getReceivers().forEach((RTCRtpReceiver) => {
+              if (RTCRtpReceiver.track) RTCRtpReceiver.track.enabled = !hold;
+            })
+            // Stop all the outbound streams (especially usefull for Conference Calls!!)
+            pc.getSenders().forEach(function (RTCRtpSender) {
+              RTCRtpSender.track.enabled = !hold;
+            })
           },
           onReject: () => {
 
@@ -318,11 +289,11 @@ export default class BonTalk {
    * @param mute - Mute on if true, off if false.
    */
   toggleMicrophone(mute: boolean) {
-    const currentSession = this.sessions[this.currentSessionIndex].sessionDescriptionHandler.peerConnection //currentSession is Inviter or Invitation
+    const currentSession = this.sessions[this.currentSessionIndex].sessionDescriptionHandler!.peerConnection //currentSession is Inviter or Invitation
 
     currentSession.getLocalStreams().forEach(function (stream) {
       stream.getAudioTracks().forEach(function (track) {
-        track.enabled = !mute        
+        track.enabled = !mute
       });
     });
   }

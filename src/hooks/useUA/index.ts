@@ -123,10 +123,10 @@ export default function useUA() {
     }
   }
 
-  const hold = async () => {
+  const setHold = async (hold:boolean) => {
     if (!bonTalk) return
     try {
-      await bonTalk.hold()
+      await bonTalk.setHold(hold)
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to hold call`)
       console.error(error)
@@ -168,7 +168,7 @@ export default function useUA() {
     answerCall,
     rejectCall,
     hangupCall,
-    holdCall: hold,
+    setHold,
     invitationRef,
     sendDTMF,
     setMute

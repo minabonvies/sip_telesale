@@ -7,7 +7,7 @@ import { useBonTalk } from "./Provider/BonTalkProvider"
 
 export default function Playground() {
   const bonTalk = useBonTalk()
-  const { audioRef, ringToneRef, dtmfRef, audioCall, answerCall, rejectCall, hangupCall, holdCall, invitationRef, sendDTMF,setMute } = useUA()
+  const { audioRef, ringToneRef, dtmfRef, audioCall, answerCall, rejectCall, hangupCall, setHold, invitationRef, sendDTMF,setMute } = useUA()
 
   const [isHold, setIsHold] = useState(false)
   const [isMute, setIsMute] = useState(false)
@@ -31,9 +31,10 @@ export default function Playground() {
   const handleHold = async () => {
     if (isHold) {
       setIsHold(false)
+      await setHold(false)
     } else {
-      await holdCall()
       setIsHold(true)
+      await setHold(true)
     }
   }
   const handleMute = () => {
