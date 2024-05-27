@@ -160,6 +160,18 @@ export default function useUA() {
     }
   }
 
+  const blindTransfer = async (user: string) => {
+    if (!bonTalk) return
+    try {
+      await bonTalk.blindTransfer(user)
+      dtmfTone()
+    } catch (error) {
+      console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to blind transfer`)
+      console.error(error)
+      alert("Failed to blind transfer.\n" + error)
+    }
+  }
+
   return {
     audioRef,
     ringToneRef,
@@ -171,6 +183,6 @@ export default function useUA() {
     setHold,
     invitationRef,
     sendDTMF,
-    setMute
+    setMute,blindTransfer
   }
 }

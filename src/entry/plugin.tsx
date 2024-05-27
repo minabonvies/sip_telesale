@@ -258,7 +258,7 @@ export default class BonTalk {
     this.currentSessionIndex = Math.min(this.currentSessionIndex, this.sessions.length - 1)
   }
 
-  async setHold(hold:boolean) {
+  async setHold(hold: boolean) {
     const currentSession = this.sessions[this.currentSessionIndex]
 
     if (currentSession.state === SessionState.Established) {
@@ -313,6 +313,18 @@ export default class BonTalk {
       }
     }
     await currentSession.info(sessionInfoOptions)
+  }
+
+  async blindTransfer(user:string) {
+    const newTarget = UserAgent.makeURI(`sip:${user}@${this.domains[this.currentDomainIndex]}`);
+    if (!newTarget) {
+      throw new BonTalkError("[bonTalk] new target is not defined")
+    }
+    const currentSession = this.sessions[this.currentSessionIndex]
+    if (!currentSession) {
+      throw new BonTalkError("[bonTalk] session not initialized")
+    }
+    currentSession.refer(newTarget)
   }
 
   /**
