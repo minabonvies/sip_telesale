@@ -1,87 +1,36 @@
 import styled from "@emotion/styled"
+import useInputKeys from "@/hooks/useInputKeys"
 
-type Props = {
-  onKeyPress: (key: string) => void
-}
+import ActionPad from "../ActionPad"
+import NumberPad from "../NumberPad"
 
-export default function KeyPad(props: Props) {
+export default function KeyPad() {
+  const { inputKeys, enterKey } = useInputKeys()
+
+  const handleKeyPress = (key: string) => {
+    enterKey(key)
+  }
+
   return (
-    <KeyPadContainer>
-      {KEYS.map((key) => (
-        <KeyPadButton key={key.text} onClick={() => props.onKeyPress(key.text)}>
-          <div>{key.text}</div>
-          {key.subText ? <div>{key.subText}</div> : null}
-        </KeyPadButton>
-      ))}
-    </KeyPadContainer>
+    <PadsContainer>
+      <KeysText>{inputKeys || "輸入號碼"}</KeysText>
+      <div style={{ height: "36px" }} />
+      <NumberPad onKeyPress={handleKeyPress} />
+      <div style={{ height: "32px" }} />
+      <ActionPad />
+    </PadsContainer>
   )
 }
 
-const KEYS = [
-  {
-    text: "1",
-    subText: " ",
-  },
-  {
-    text: "2",
-    subText: "ABC",
-  },
-  {
-    text: "3",
-    subText: "DEF",
-  },
-  {
-    text: "4",
-    subText: "GHI",
-  },
-  {
-    text: "5",
-    subText: "JKL",
-  },
-  {
-    text: "6",
-    subText: "MNO",
-  },
-  {
-    text: "7",
-    subText: "PQRS",
-  },
-  {
-    text: "8",
-    subText: "TUV",
-  },
-  {
-    text: "9",
-    subText: "WXYZ",
-  },
-  {
-    text: "*",
-    subText: "",
-  },
-  {
-    text: "0",
-    subText: "+",
-  },
-  {
-    text: "#",
-    subText: "",
-  },
-]
-
-const KeyPadButton = styled.button({
+const PadsContainer = styled.div({
   display: "flex",
   flexDirection: "column",
-  justifyContent: "center",
-  alignItems: "center",
-
-  border: "transparent",
-  borderRadius: "50%",
+  paddingTop: "16px",
 })
 
-const KeyPadContainer = styled.div({
-  display: "grid",
-  gridTemplateColumns: "repeat(3, 72px)",
-  gridAutoRows: "72px",
-  gap: "24px 32px",
-  backgroundColor: "transparent",
+const KeysText = styled.div({
+  color: "white",
+  fontSize: "24px",
+  lineHeight: "normal",
+  textAlign: "center",
 })
