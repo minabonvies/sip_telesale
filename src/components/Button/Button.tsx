@@ -40,7 +40,7 @@ const Button = styled("button", {
     },
 
     "&:active": {
-      color: variant === "solid" ? alpha(props.theme.colors.text.white, 0.6) : alpha(color, 0.6),
+      color: variant === "solid" ? props.theme.colors.action.press : alpha(color, 0.6),
       backgroundColor: variant === "solid" ? alpha(color, 0.6) : transparent,
     },
 
@@ -50,7 +50,7 @@ const Button = styled("button", {
       backgroundColor: variant === "solid" ? disabledColor : transparent,
     }),
 
-    transition: "background-color 0.2s ease-out, color 0.2s ease-out",
+    transition: "background-color 0.2s ease-out, color 0.1s ease-out",
     willChange: "background-color, color",
   }
 })

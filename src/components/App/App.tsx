@@ -15,7 +15,9 @@ export default function App() {
       <Content>
         <KeyPad />
       </Content>
-      <Footer>Logo</Footer>
+      <Footer>
+        <Logo />
+      </Footer>
     </AppContainer>
   )
 }
@@ -60,4 +62,12 @@ const Footer = styled.div({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
+})
+
+const Logo = styled.div({
+  width: "48px",
+  height: "32px",
+  backgroundImage: "url(vite.svg)",
+  backgroundSize: "cover",
+  backgroundPosition: "center",
 })

@@ -6,7 +6,6 @@ const KeyPadContainer = styled.div({
   gridAutoRows: "64px",
   gap: "32px",
   backgroundColor: "transparent",
-  // outline: "1px solid white",
 })
 
 export default KeyPadContainer

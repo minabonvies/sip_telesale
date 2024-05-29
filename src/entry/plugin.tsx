@@ -6,6 +6,7 @@ import "./index.css"
 import { Invitation, InvitationAcceptOptions, Inviter, Registerer, Session, SessionState, UserAgent, UserAgentDelegate } from "sip.js"
 import BonTalkError from "@/utils/BonTalkError"
 import ThemeProvider from "@/Provider/ThemeProvider"
+import ErrorBoundary from "@/components/ErrorBoundary"
 
 export default class BonTalk {
   private rootId = "_bon_sip_phone_root"
@@ -326,11 +327,13 @@ export default class BonTalk {
 
     this.reactRoot = ReactDOM.createRoot(root)
     this.reactRoot.render(
-      <ThemeProvider mode="dark">
-        <BonTalkProvider value={this}>
-          <App />
-        </BonTalkProvider>
-      </ThemeProvider>
+      <ErrorBoundary>
+        <ThemeProvider mode="dark">
+          <BonTalkProvider value={this}>
+            <App />
+          </BonTalkProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
     )
   }
 

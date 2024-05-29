@@ -35,9 +35,7 @@ const theme = {
         white: "#FFFFFF",
       },
       transparent: "#00000000",
-      action: {
-        disabled: "rgba(255, 255, 255, 0.3)",
-      },
+      action: { press: "rgba(0,0,0,0.6)", disabled: "rgba(255, 255, 255, 0.3)" },
     },
     dark: {
       primary: {
@@ -62,9 +60,7 @@ const theme = {
         white: "#FFFFFF",
       },
       transparent: "#00000000",
-      action: {
-        disabled: "rgba(255, 255, 255, 0.3)",
-      },
+      action: { press: "rgba(0,0,0,0.6)", disabled: "rgba(255, 255, 255, 0.3)" },
     },
   },
 } as const
