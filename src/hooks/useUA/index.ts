@@ -123,7 +123,7 @@ export default function useUA() {
     }
   }
 
-  const setHold = async (hold:boolean) => {
+  const setHold = async (hold: boolean) => {
     if (!bonTalk) return
     try {
       await bonTalk.setHold(hold)
@@ -134,7 +134,7 @@ export default function useUA() {
     }
   }
 
-  const setMute = (mute:boolean) => {
+  const setMute = (mute: boolean) => {
     if (!bonTalk) return
     bonTalk.toggleMicrophone(mute);
   }
@@ -160,10 +160,10 @@ export default function useUA() {
     }
   }
 
-  const blindTransfer = async (user: string) => {
+  const blindTransfer = async (target: string) => {
     if (!bonTalk) return
     try {
-      await bonTalk.blindTransfer(user)
+      await bonTalk.blindTransfer(target)
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to blind transfer`)
       console.error(error)
@@ -171,14 +171,25 @@ export default function useUA() {
     }
   }
 
-  const attendedTransfer = async (user: string) => {
+  const preAttendedTransfer = async (target: string) => {
     if (!bonTalk) return
     try {
-      await bonTalk.attendedTransfer(user)
+      await bonTalk.preAttendedTransfer(target)
     } catch (error) {
-      console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to attended transfer`)
+      console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to attended transfer - invite`)
       console.error(error)
-      alert("Failed to attended transfer.\n" + error)
+      alert("Failed to attended transfer - invite.\n" + error)
+    }
+  }
+
+  const attendedTransfer = async () => {
+    if (!bonTalk) return
+    try {
+      await bonTalk.attendedTransfer()
+    } catch (error) {
+      console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to attended transfer - transfer`)
+      console.error(error)
+      alert("Failed to attended transfer - transfer.\n" + error)
     }
   }
 
@@ -193,6 +204,6 @@ export default function useUA() {
     setHold,
     invitationRef,
     sendDTMF,
-    setMute,blindTransfer,attendedTransfer
+    setMute, blindTransfer, preAttendedTransfer, attendedTransfer
   }
 }

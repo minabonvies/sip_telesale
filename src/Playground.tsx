@@ -7,7 +7,7 @@ import { useBonTalk } from "./Provider/BonTalkProvider"
 
 export default function Playground() {
   const bonTalk = useBonTalk()
-  const { audioRef, ringToneRef, dtmfRef, audioCall, answerCall, rejectCall, hangupCall, setHold, invitationRef, sendDTMF,setMute,blindTransfer,attendedTransfer } = useUA()
+  const { audioRef, ringToneRef, dtmfRef, audioCall, answerCall, rejectCall, hangupCall, setHold, invitationRef, sendDTMF, setMute, blindTransfer, attendedTransfer, preAttendedTransfer } = useUA()
 
   const [isHold, setIsHold] = useState(false)
   const [isMute, setIsMute] = useState(false)
@@ -55,12 +55,16 @@ export default function Playground() {
 
   }
 
-  const handleBlindTransfer=() => {
+  const handleBlindTransfer = () => {
     blindTransfer("3003")
   }
 
-  const handleAttendedTransfer=() => {
-    attendedTransfer("3003")
+  const handlePreAttendedTransfer = () => {
+    preAttendedTransfer("3003")
+  }
+
+  const handleAttendedTransfer = () => {
+    attendedTransfer()
   }
 
   return (
@@ -80,7 +84,8 @@ export default function Playground() {
       <button onClick={handleMute}>{isMute ? "UnMute" : "Mute"}</button>
       <button onClick={handleDisplayKeypad}>Keypad</button>
       <button onClick={handleBlindTransfer}>盲轉</button>
-      <button onClick={handleAttendedTransfer}>通話轉</button>
+      <button onClick={handlePreAttendedTransfer}>通話轉</button>
+      <button onClick={handleAttendedTransfer}>通話轉2</button>
       <button onClick={handleDTMF("1")}>1</button>
       <button onClick={handleDTMF("2")}>2</button>
       <button onClick={handleDTMF("3")}>3</button>

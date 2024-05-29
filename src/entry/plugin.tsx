@@ -201,6 +201,7 @@ export default class BonTalk {
     await inviter.invite(invitationAcceptOptions)
     const sessionTotalCount = this.sessions.push(inviter)
     this.currentSessionIndex = sessionTotalCount - 1
+    console.log(this.currentSessionIndex);
   }
 
   async answerCall(invitation: Invitation) {
@@ -315,60 +316,46 @@ export default class BonTalk {
     await currentSession.info(sessionInfoOptions)
   }
 
-  async blindTransfer(user: string) {
-    const newTarget = UserAgent.makeURI(`sip:${user}@${this.domains[this.currentDomainIndex]}`);
+  async blindTransfer(target: string) {
+    const newTarget = UserAgent.makeURI(this.urlTemplate(target));
     if (!newTarget) {
       throw new BonTalkError("[bonTalk] new target is not defined")
     }
     const currentSession = this.sessions[this.currentSessionIndex]
+
     if (!currentSession) {
       throw new BonTalkError("[bonTalk] session not initialized")
     }
     currentSession.refer(newTarget)
+
+    // remove all sessions from the list
+    this.sessions.forEach(() => {
+      this.sessions.splice(this.currentSessionIndex, 1)
+    })
+
+    this.currentSessionIndex = 0
   }
 
-  async attendedTransfer(user: string) {
+  async preAttendedTransfer(target: string) {
     this.setHold(true)
-    if (!this.userAgent) {
-      throw new BonTalkError("[bonTalk] userAgent not initialized")
-    }
-    const newTarget = UserAgent.makeURI(`sip:${user}@${this.domains[this.currentDomainIndex]}`);
-    if (!newTarget) {
-      throw new BonTalkError("[bonTalk] new target is not defined")
-    }
-    const currentSession = this.sessions[this.currentSessionIndex]
-    if (!currentSession) {
-      throw new BonTalkError("[bonTalk] session not initialized")
+    this.audioCall(target)
+  }
+
+  async attendedTransfer() {
+    if (this.sessions.length != 2) {
+      throw new BonTalkError("[bonTalk] sessions not initialized")
     }
 
-    const audioElement = document.getElementById(this._audioElementId)
-    if (!audioElement) {
-      throw new BonTalkError(`[bonTalk] audioElement with id ${this._audioElementId} not found`)
-    }
+    const firstSession = this.sessions[this.currentSessionIndex - 1]
+    const secondSession = this.sessions[this.currentSessionIndex]
+    await firstSession.refer(secondSession)
 
-    const replacementSession = new Inviter(this.userAgent, newTarget);
-    replacementSession.stateChange.addListener((state: SessionState) => {
-      switch (state) {
-        case SessionState.Initial:
-          break
-        case SessionState.Establishing:
-          break
-        case SessionState.Established:
-          BonTalk.setupRemoteMedia(replacementSession, audioElement as HTMLMediaElement)
-
-          break
-        case SessionState.Terminating:
-        case SessionState.Terminated:
-          BonTalk.cleanupMedia(audioElement as HTMLMediaElement)
-          break
-        default:
-          throw new Error("Unknown session state.")
-      }
+    // remove all sessions from the list
+    this.sessions.forEach(() => {
+      this.sessions.splice(this.currentSessionIndex, 1)
     })
-    await replacementSession.invite()
-    const sessionTotalCount = this.sessions.push(replacementSession)
-    this.currentSessionIndex = sessionTotalCount - 1
-    // currentSession.refer(replacementSession);
+
+    this.currentSessionIndex = 0
   }
 
   /**
