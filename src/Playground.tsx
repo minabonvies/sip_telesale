@@ -72,10 +72,6 @@ export default function Playground() {
       <audio id={bonTalk!.audioElementId} ref={audioRef}></audio>
       <audio loop ref={ringToneRef} src={ringtone_file}></audio>
       <audio ref={dtmfRef} src={dtmf_file}></audio>
-      {/* <button onClick={handleConnect}>Connect</button> */}
-      {/* <button onClick={handleDisconnect}>Disconnect</button> */}
-      {/* <button onClick={handleLogin}>Login</button>
-      <button onClick={handleLogout}>Logout</button> */}
       {invitationRef ? <button onClick={handleAnswer}>Answer</button> : null}
       {invitationRef ? <button onClick={handleReject}>Reject</button> : null}
       <button onClick={handleAudioCall}>Audio Call</button>
@@ -98,7 +94,6 @@ export default function Playground() {
       <button onClick={handleDTMF("0")}>0</button>
       <button onClick={handleDTMF("*")}>*</button>
       <button onClick={handleDTMF("#")}>#</button>
-      {/* <span>{tone.toString()}</span> */}
     </div>
   )
 }
