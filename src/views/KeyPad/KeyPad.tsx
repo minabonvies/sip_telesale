@@ -1,8 +1,9 @@
 import styled from "@emotion/styled"
 import useInputKeys from "@/hooks/useInputKeys"
 
-import NumberPad from "../NumberPad"
-import ActionPad, { type ActionButtonType } from "../ActionPad"
+import ViewContainer from "@/components/ViewContainer"
+import NumberPad from "@/components/NumberPad"
+import ActionPad, { type ActionButtonType } from "@/components/ActionPad"
 
 export default function KeyPad() {
   const { inputKeys, enterKey, deleteKey } = useInputKeys()
@@ -12,8 +13,9 @@ export default function KeyPad() {
   }
 
   const handleActionPress = (action: ActionButtonType) => {
+    //TODO handle these action
     switch (action) {
-      case "ACCEPT_VIDEO":
+      case "CALL_VIDEO":
         console.log("ACCEPT_VIDEO")
         break
       case "CALL":
@@ -41,26 +43,19 @@ export default function KeyPad() {
   }
 
   return (
-    <PadsContainer>
+    <ViewContainer>
       <KeysText>{inputKeys || "輸入號碼"}</KeysText>
       <div style={{ height: "34px" }} />
       <NumberPad onKeyPress={handleKeyPress} />
       <div style={{ height: "32px" }} />
       <ActionPad onButtonClick={handleActionPress} />
-    </PadsContainer>
+    </ViewContainer>
   )
 }
 
-const PadsContainer = styled.div({
-  display: "flex",
-  flexDirection: "column",
-  paddingTop: "16px",
-})
-
-const KeysText = styled.div({
+const KeysText = styled.div((props) => ({
+  ...props.theme.typography.h1,
   color: "white",
-  fontSize: "24px",
-  lineHeight: "normal",
   textAlign: "center",
   height: "32px",
-})
+}))

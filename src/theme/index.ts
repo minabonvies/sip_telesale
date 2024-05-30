@@ -5,6 +5,7 @@ declare module "@emotion/react" {
     colorMode: "light" | "dark"
     toggleColorMode: () => void
     colors: (typeof theme.colors)[keyof typeof theme.colors]
+    typography: typeof theme.typography
     isColorToken: (token: string) => boolean
   }
 }
@@ -33,6 +34,7 @@ const theme = {
       },
       text: {
         white: "#FFFFFF",
+        primary: "rgba(250,250,250,1)",
       },
       transparent: "#00000000",
       action: { press: "rgba(0,0,0,0.6)", disabled: "rgba(255, 255, 255, 0.3)" },
@@ -58,9 +60,24 @@ const theme = {
       },
       text: {
         white: "#FFFFFF",
+        primary: "rgba(250,250,250,1)",
       },
       transparent: "#00000000",
       action: { press: "rgba(0,0,0,0.6)", disabled: "rgba(255, 255, 255, 0.3)" },
+    },
+  },
+  typography: {
+    h1: {
+      fontSize: "24px",
+      fontStyle: "normal",
+      fontWeight: 400,
+      lineHeight: "normal",
+    },
+    h2: {
+      fontSize: "16px",
+      fontStyle: "normal",
+      fontWeight: 400,
+      lineHeight: "normal",
     },
   },
 } as const

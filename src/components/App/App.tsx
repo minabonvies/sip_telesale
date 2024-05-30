@@ -1,19 +1,31 @@
 import styled from "@emotion/styled"
 
+import { useBonTalk } from "@/Provider/BonTalkProvider"
+import KeyPad from "@/views/KeyPad"
+import IncomingCall from "@/views/IncomingCall"
 import Button from "../Button"
 import Cancel from "../Icons/cancel"
-import KeyPad from "../KeyPad"
+import Hide from "../Icons/hide"
+import Calling from "@/views/Calling"
 
 export default function App() {
+  const bonTalk = useBonTalk()
   return (
     <AppContainer>
       <Header>
-        <IconButton color="error" variant="ghost">
+        {/* 上一步的按鈕？ */}
+        {/* <IconButton color="error" variant="ghost">
           <Cancel />
+        </IconButton> */}
+        {/* 隱藏按鈕 */}
+        <IconButton color="error" variant="ghost" onClick={() => bonTalk?.togglePanel()}>
+          <Hide />
         </IconButton>
       </Header>
       <Content>
         <KeyPad />
+        {/* <IncomingCall /> */}
+        {/* <Calling /> */}
       </Content>
       <Footer>
         <Logo />
@@ -51,7 +63,11 @@ const Header = styled.div({
 })
 
 const Content = styled.div({
+  display: "flex",
+  flexDirection: "column",
   flex: 1,
+  width: "100%",
+  height: "100%",
 })
 
 const Footer = styled.div({
