@@ -17,6 +17,7 @@ export default function useUA() {
 
   const [referral, setReferral] = useState<Referral | null>(null)
 
+  const [c, setC] = useState("0")
 
   useEffect(() => {
     if (!bonTalk) return
@@ -25,8 +26,10 @@ export default function useUA() {
       await bonTalk?.login()
 
       bonTalk?.addDelegate("onInvite", (invitation: Invitation) => {
+        console.log(invitation)
         startRingTone()
         setInvitation(invitation)
+        setC("1")
 
         invitation.stateChange.addListener((state: SessionState) => {
           switch (state) {
@@ -42,6 +45,7 @@ export default function useUA() {
             case SessionState.Terminated:
               BonTalk.cleanupMedia(bonTalk?.audioElement)
               stopRingTone()
+              setC("0")
               break
             default:
               throw new Error("Unknown session state.")
@@ -81,9 +85,7 @@ export default function useUA() {
     _login()
   }, [])
 
-  const acceptReferral = () => {
-
-  }
+  const acceptReferral = () => {}
 
   const audioCall = async (target: string) => {
     if (!bonTalk) return
@@ -170,7 +172,7 @@ export default function useUA() {
 
   const setMute = (mute: boolean) => {
     if (!bonTalk) return
-    bonTalk.toggleMicrophone(mute);
+    bonTalk.toggleMicrophone(mute)
   }
 
   const dtmfTone = () => {
@@ -238,6 +240,10 @@ export default function useUA() {
     setHold,
     invitationRef,
     sendDTMF,
-    setMute, blindTransfer, preAttendedTransfer, attendedTransfer
+    setMute,
+    blindTransfer,
+    preAttendedTransfer,
+    attendedTransfer,
+    c,
   }
 }

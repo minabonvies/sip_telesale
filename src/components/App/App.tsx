@@ -7,30 +7,41 @@ import Button from "../Button"
 import Cancel from "../Icons/cancel"
 import Hide from "../Icons/hide"
 import Calling from "@/views/Calling"
+import useUA from "@/hooks/useUA"
+
+import ringtone from "@/assets/sounds/ringtone.wav"
 
 export default function App() {
   const bonTalk = useBonTalk()
+
+  const { ringToneRef, c } = useUA()
+
   return (
-    <AppContainer>
-      <Header>
-        {/* 上一步的按鈕？ */}
-        {/* <IconButton color="error" variant="ghost">
+    <>
+      <audio controls id={bonTalk!.audioElementId} />
+      <audio controls ref={ringToneRef} src={ringtone} />
+      <AppContainer>
+        <Header>
+          {/* 上一步的按鈕？ */}
+          {/* <IconButton color="error" variant="ghost">
           <Cancel />
         </IconButton> */}
-        {/* 隱藏按鈕 */}
-        <IconButton color="error" variant="ghost" onClick={() => bonTalk?.togglePanel()}>
-          <Hide />
-        </IconButton>
-      </Header>
-      <Content>
-        <KeyPad />
-        {/* <IncomingCall /> */}
-        {/* <Calling /> */}
-      </Content>
-      <Footer>
-        <Logo />
-      </Footer>
-    </AppContainer>
+          {/* 隱藏按鈕 */}
+          <IconButton color="error" variant="ghost" onClick={() => bonTalk?.togglePanel()}>
+            <Hide />
+          </IconButton>
+        </Header>
+        <Content>
+          {c === "0" ? <KeyPad /> : null}
+          {c === "1" ? <IncomingCall /> : null}
+          {/* <IncomingCall /> */}
+          {/* <Calling /> */}
+        </Content>
+        <Footer>
+          <Logo />
+        </Footer>
+      </AppContainer>
+    </>
   )
 }
 
