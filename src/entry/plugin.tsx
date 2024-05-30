@@ -5,6 +5,8 @@ import "./normalize.css"
 import "./index.css"
 import { Invitation, InvitationAcceptOptions, Inviter, Registerer, Session, SessionState, UserAgent, UserAgentDelegate, SessionDescriptionHandler, SessionInviteOptions } from "sip.js"
 import BonTalkError from "@/utils/BonTalkError"
+import ThemeProvider from "@/Provider/ThemeProvider"
+import ErrorBoundary from "@/components/ErrorBoundary"
 
 export default class BonTalk {
   private rootId = "_bon_sip_phone_root"
@@ -139,15 +141,27 @@ export default class BonTalk {
     if (!this.userAgent) {
       throw new BonTalkError("[bonTalk] userAgent not initialized")
     }
+    if (!this.userAgent.isConnected()) {
+      try {
+        await this.userAgent.start()
+      } catch (err) {
+        throw new BonTalkError(`[bonTalk] failed to connect userAgent: ${err}`)
+      }
+    } else {
+      console.warn("[bonTalk] the userAgent.start() been called, userAgent already connected")
+    }
+
     if (!this.registerer) {
       throw new BonTalkError("[bonTalk] registerer not initialized")
     }
-
-    try {
-      await this.userAgent.start()
-      await this.registerer.register()
-    } catch (err) {
-      throw new BonTalkError(`[bonTalk] failed to start userAgent: ${err}`)
+    if (this.registerer?.state !== "Registered") {
+      try {
+        await this.registerer.register()
+      } catch (err) {
+        throw new BonTalkError(`[bonTalk] failed to register userAgent: ${err}`)
+      }
+    } else {
+      console.warn("[bonTalk] the registerer.register() been called, registerer already registered")
     }
   }
 
@@ -199,6 +213,7 @@ export default class BonTalk {
       }
     })
     await inviter.invite(invitationAcceptOptions)
+
     const sessionTotalCount = this.sessions.push(inviter)
     this.currentSessionIndex = sessionTotalCount - 1
     console.log(this.currentSessionIndex);
@@ -234,6 +249,7 @@ export default class BonTalk {
 
   async hangupCall() {
     const currentSession = this.sessions[this.currentSessionIndex]
+    console.log(currentSession)
     switch (currentSession.state) {
       case SessionState.Initial:
       case SessionState.Establishing:
@@ -387,9 +403,13 @@ export default class BonTalk {
 
     this.reactRoot = ReactDOM.createRoot(root)
     this.reactRoot.render(
-      <BonTalkProvider value={this}>
-        <App />
-      </BonTalkProvider>
+      <ErrorBoundary>
+        <ThemeProvider mode="dark">
+          <BonTalkProvider value={this}>
+            <App />
+          </BonTalkProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
     )
   }
 

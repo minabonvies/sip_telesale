@@ -13,7 +13,8 @@ export default function Playground() {
   const [isMute, setIsMute] = useState(false)
 
   const handleAudioCall = async () => {
-    await audioCall("3001")
+    // TODO change to input
+    await audioCall("3002")
   }
 
   const handleAnswer = async () => {

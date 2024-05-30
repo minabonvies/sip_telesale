@@ -3,7 +3,7 @@ import { Invitation, SessionState, Referral } from "sip.js"
 import { useBonTalk } from "@/Provider/BonTalkProvider"
 import BonTalk from "@/entry/plugin"
 
-// should rename to useCall
+// TODO: should rename to useCall
 export default function useUA() {
   const bonTalk = useBonTalk()
 
@@ -20,7 +20,6 @@ export default function useUA() {
 
   useEffect(() => {
     if (!bonTalk) return
-    if (bonTalk.userAgentInstance?.isConnected && bonTalk.registererInstance?.state === "Registered") return
 
     async function _login() {
       await bonTalk?.login()
@@ -78,6 +77,7 @@ export default function useUA() {
       })
     }
 
+    // TODO: React.strictMode warning
     _login()
   }, [])
 
