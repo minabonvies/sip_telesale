@@ -3,7 +3,17 @@ import ReactDOM from "react-dom/client"
 import BonTalkProvider from "@/Provider/BonTalkProvider"
 import "./normalize.css"
 import "./index.css"
-import { Invitation, InvitationAcceptOptions, Inviter, Registerer, Session, SessionState, UserAgent, UserAgentDelegate, SessionDescriptionHandler, SessionInviteOptions } from "sip.js"
+import {
+  Invitation,
+  InvitationAcceptOptions,
+  Inviter,
+  Registerer,
+  Session,
+  SessionState,
+  UserAgent,
+  UserAgentDelegate,
+  SessionInviteOptions,
+} from "sip.js"
 import BonTalkError from "@/utils/BonTalkError"
 import ThemeProvider from "@/Provider/ThemeProvider"
 import ErrorBoundary from "@/components/ErrorBoundary"
@@ -13,7 +23,7 @@ export default class BonTalk {
   private _audioElementId = "_bon_sip_phone_audio"
 
   private buttonElementId: string
-  private buttonElement: HTMLElement | null = null
+  // private buttonElement: HTMLElement | null = null
   private rootElement: HTMLElement | null = null
   private reactRoot: ReactDOM.Root | null = null
 
@@ -30,8 +40,7 @@ export default class BonTalk {
   private registerer: Registerer | null = null
   private registerExpires: number = 300
 
-  private sessions: Session[] = []
-  private currentSessionIndex = 0
+  private sessionManager: SessionManager = new SessionManager()
 
   static makeURI(target: string) {
     const uri = UserAgent.makeURI(target)
@@ -121,10 +130,6 @@ export default class BonTalk {
     return this.registerer
   }
 
-  get currentSession() {
-    return this.sessions[this.currentSessionIndex]
-  }
-
   get audioElementId() {
     return this._audioElementId
   }
@@ -175,7 +180,7 @@ export default class BonTalk {
     await this.registerer.unregister()
   }
 
-  async audioCall(target: string) {
+  async audioCall(target: string, as: SessionName) {
     if (!this.userAgent) {
       throw new BonTalkError("[bonTalk] userAgent not initialized")
     }
@@ -202,10 +207,12 @@ export default class BonTalk {
         case SessionState.Establishing:
           break
         case SessionState.Established:
+          this.sessionManager.addSession(as, inviter)
           BonTalk.setupRemoteMedia(inviter, audioElement as HTMLMediaElement)
           break
         case SessionState.Terminating:
         case SessionState.Terminated:
+          this.sessionManager.removeSession(as)
           BonTalk.cleanupMedia(audioElement as HTMLMediaElement)
           break
         default:
@@ -213,13 +220,9 @@ export default class BonTalk {
       }
     })
     await inviter.invite(invitationAcceptOptions)
-
-    const sessionTotalCount = this.sessions.push(inviter)
-    this.currentSessionIndex = sessionTotalCount - 1
-    console.log(this.currentSessionIndex);
   }
 
-  async answerCall(invitation: Invitation) {
+  async answerCall(invitation: Invitation, as: SessionName) {
     if (!invitation) {
       throw new BonTalkError("[bonTalk] invitation not initialized")
     }
@@ -236,20 +239,24 @@ export default class BonTalk {
       throw new BonTalkError(`[bonTalk] audioElement with id ${this._audioElementId} not found`)
     }
     await invitation.accept(invitationAcceptOptions)
-    const sessionTotalCount = this.sessions.push(invitation)
-    this.currentSessionIndex = sessionTotalCount - 1
+    this.sessionManager.addSession(as, invitation)
   }
 
-  async rejectCall(invitation: Invitation) {
+  async rejectCall(sessionName: SessionName) {
+    const invitation = this.sessionManager.getSession(sessionName)
+
+    if (!(invitation instanceof Invitation)) {
+      throw new BonTalkError("[bonTalk] invitation is not an instance of Invitation")
+    }
     if (!invitation) {
       throw new BonTalkError("[bonTalk] invitation not initialized")
     }
+
     await invitation.reject()
   }
 
-  async hangupCall() {
-    const currentSession = this.sessions[this.currentSessionIndex]
-    console.log(currentSession)
+  async hangupCall(sessionName: SessionName) {
+    const currentSession = this.sessionManager.getSession(sessionName)
     switch (currentSession.state) {
       case SessionState.Initial:
       case SessionState.Establishing:
@@ -267,35 +274,33 @@ export default class BonTalk {
         break
       case SessionState.Terminating:
       case SessionState.Terminated:
+        this.sessionManager.removeSession(sessionName)
         break
     }
-    // remove the session from the list
-    this.sessions.splice(this.currentSessionIndex, 1)
-    // adjust the current session index
-    this.currentSessionIndex = Math.min(this.currentSessionIndex, this.sessions.length - 1)
   }
 
-  async setHold(hold: boolean) {
-    const currentSession = this.sessions[this.currentSessionIndex]
+  async setHold(hold: boolean, sessionName: SessionName) {
+    const currentSession = this.sessionManager.getSession(sessionName)
 
     if (currentSession.state === SessionState.Established) {
       const options: SessionInviteOptions = {
         requestDelegate: {
           onAccept: () => {
-            const pc = currentSession.sessionDescriptionHandler!.peerConnection;
+            // @ts-expect-error sip.js types are not up to date
+            const pc = currentSession.sessionDescriptionHandler!.peerConnection
+            // @ts-expect-error sip.js types are not up to date
             // Stop all the inbound streams
             pc.getReceivers().forEach((RTCRtpReceiver) => {
-              if (RTCRtpReceiver.track) RTCRtpReceiver.track.enabled = !hold;
+              if (RTCRtpReceiver.track) RTCRtpReceiver.track.enabled = !hold
             })
-            // Stop all the outbound streams (especially usefull for Conference Calls!!)
+            // @ts-expect-error sip.js types are not up to date
+            // Stop all the outbound streams (especially useful for Conference Calls!!)
             pc.getSenders().forEach(function (RTCRtpSender) {
-              RTCRtpSender.track.enabled = !hold;
+              RTCRtpSender.track.enabled = !hold
             })
           },
-          onReject: () => {
-
-          }
-        }
+          onReject: () => {},
+        },
       }
       await currentSession.invite(options)
     }
@@ -305,18 +310,19 @@ export default class BonTalk {
    * Puts Session on mute.
    * @param mute - Mute on if true, off if false.
    */
-  toggleMicrophone(mute: boolean) {
-    const currentSession = this.sessions[this.currentSessionIndex].sessionDescriptionHandler!.peerConnection //currentSession is Inviter or Invitation
-
-    currentSession.getLocalStreams().forEach(function (stream) {
+  toggleMicrophone(mute: boolean, sessionName: SessionName) {
+    const currentSession = this.sessionManager.getSession(sessionName)
+    // @ts-expect-error sip.js types are not up to date
+    currentSession.sessionDescriptionHandler!.peerConnection.getLocalStreams().forEach(function (stream) {
+      // @ts-expect-error sip.js types are not up to date
       stream.getAudioTracks().forEach(function (track) {
         track.enabled = !mute
-      });
-    });
+      })
+    })
   }
 
-  async sendDTMF(tone: string) {
-    const currentSession = this.sessions[this.currentSessionIndex]
+  async sendDTMF(tone: string, sessionName: SessionName) {
+    const currentSession = this.sessionManager.getSession(sessionName)
     if (!currentSession) {
       throw new BonTalkError("[bonTalk] session not initialized")
     }
@@ -325,53 +331,48 @@ export default class BonTalk {
         body: {
           contentDisposition: "render",
           contentType: "application/dtmf-relay",
-          content: `Signal=${tone}\r\nDuration=100`
-        }
-      }
+          content: `Signal=${tone}\r\nDuration=100`,
+        },
+      },
     }
     await currentSession.info(sessionInfoOptions)
   }
 
-  async blindTransfer(target: string) {
-    const newTarget = UserAgent.makeURI(this.urlTemplate(target));
+  async blindTransfer(from: SessionName, target: string) {
+    const newTarget = UserAgent.makeURI(this.urlTemplate(target))
     if (!newTarget) {
       throw new BonTalkError("[bonTalk] new target is not defined")
     }
-    const currentSession = this.sessions[this.currentSessionIndex]
+    const currentSession = this.sessionManager.getSession(from)
 
     if (!currentSession) {
       throw new BonTalkError("[bonTalk] session not initialized")
     }
     currentSession.refer(newTarget)
 
-    // remove all sessions from the list
-    this.sessions.forEach(() => {
-      this.sessions.splice(this.currentSessionIndex, 1)
-    })
-
-    this.currentSessionIndex = 0
+    this.sessionManager.removeSession(from)
   }
 
-  async preAttendedTransfer(target: string) {
-    this.setHold(true)
-    this.audioCall(target)
+  async preAttendedTransfer(from: SessionName, target: string) {
+    this.setHold(true, from)
+    this.audioCall(target, "attendedRefer")
   }
 
-  async attendedTransfer() {
-    if (this.sessions.length != 2) {
-      throw new BonTalkError("[bonTalk] sessions not initialized")
+  async attendedTransfer(from: SessionName, target: SessionName) {
+    const firstSession = this.sessionManager.getSession(from)
+    if (!firstSession) {
+      throw new BonTalkError("[bonTalk] first session not initialized")
     }
 
-    const firstSession = this.sessions[this.currentSessionIndex - 1]
-    const secondSession = this.sessions[this.currentSessionIndex]
+    const secondSession = this.sessionManager.getSession(target)
+    if (!secondSession) {
+      throw new BonTalkError("[bonTalk] second session not initialized")
+    }
+
     await firstSession.refer(secondSession)
 
-    // remove all sessions from the list
-    this.sessions.forEach(() => {
-      this.sessions.splice(this.currentSessionIndex, 1)
-    })
-
-    this.currentSessionIndex = 0
+    this.sessionManager.removeSession(from)
+    this.sessionManager.removeSession(target)
   }
 
   /**
@@ -398,7 +399,7 @@ export default class BonTalk {
     body.appendChild(root)
 
     // attach open event to button
-    this.buttonElement = buttonElement
+    // this.buttonElement = buttonElement
     buttonElement.addEventListener("click", this.togglePanel.bind(this))
 
     this.reactRoot = ReactDOM.createRoot(root)
@@ -454,5 +455,41 @@ export default class BonTalk {
       this.userAgent.delegate = {}
     }
     this.userAgent.delegate[onEvent] = callback
+  }
+}
+
+type SessionName = "incoming" | "outgoing" | "attendedRefer"
+type SessionMap = {
+  incoming: Invitation
+  outgoing: Inviter
+  attendedRefer: Inviter
+}
+class SessionManager {
+  /**
+   * {
+   *  incoming: invitation
+   *  outgoing: inviter
+   *  attendedRefer: inviter
+   *  musicOnHold: 未知
+   * }
+   */
+  private sessions: Map<SessionName, Inviter | Invitation | unknown> = new Map()
+
+  constructor() {}
+
+  getSessions() {
+    return this.sessions
+  }
+
+  addSession<T extends SessionName>(type: T, session: SessionMap[T]) {
+    this.sessions.set(type, session)
+  }
+
+  getSession<T extends SessionName>(type: T) {
+    return this.sessions.get(type) as SessionMap[T]
+  }
+
+  removeSession<T extends SessionName>(type: T) {
+    this.sessions.delete(type)
   }
 }

@@ -92,7 +92,7 @@ export default function useUA() {
     if (!target) return
 
     try {
-      await bonTalk.audioCall(target)
+      await bonTalk.audioCall(target, "outgoing")
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to place call`)
       console.error(error)
@@ -104,7 +104,7 @@ export default function useUA() {
     if (!bonTalk) return
     if (!invitation) return
     try {
-      await bonTalk.answerCall(invitation)
+      await bonTalk.answerCall(invitation, "incoming")
       stopRingTone()
       console.log("已接聽電話")
     } catch (error) {
@@ -118,7 +118,7 @@ export default function useUA() {
     if (!bonTalk) return
     if (!invitation) return
     try {
-      await bonTalk.rejectCall(invitation)
+      await bonTalk.rejectCall("incoming")
       stopRingTone()
       console.log("拒接")
     } catch (error) {
@@ -131,7 +131,7 @@ export default function useUA() {
   const hangupCall = async () => {
     if (!bonTalk) return
     try {
-      await bonTalk.hangupCall()
+      await bonTalk.hangupCall("outgoing")
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to hangup call`)
       console.error(error)
@@ -162,7 +162,7 @@ export default function useUA() {
   const setHold = async (hold: boolean) => {
     if (!bonTalk) return
     try {
-      await bonTalk.setHold(hold)
+      await bonTalk.setHold(hold, "outgoing")
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to hold call`)
       console.error(error)
@@ -172,7 +172,7 @@ export default function useUA() {
 
   const setMute = (mute: boolean) => {
     if (!bonTalk) return
-    bonTalk.toggleMicrophone(mute)
+    bonTalk.toggleMicrophone(mute, "outgoing") // TODO: discuss?
   }
 
   const dtmfTone = () => {
@@ -187,7 +187,7 @@ export default function useUA() {
   const sendDTMF = async (tone: string) => {
     if (!bonTalk) return
     try {
-      await bonTalk.sendDTMF(tone)
+      await bonTalk.sendDTMF(tone, "outgoing")
       dtmfTone()
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to send DTMF`)
@@ -199,7 +199,7 @@ export default function useUA() {
   const blindTransfer = async (target: string) => {
     if (!bonTalk) return
     try {
-      await bonTalk.blindTransfer(target)
+      await bonTalk.blindTransfer("outgoing", target)
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to blind transfer`)
       console.error(error)
@@ -210,7 +210,7 @@ export default function useUA() {
   const preAttendedTransfer = async (target: string) => {
     if (!bonTalk) return
     try {
-      await bonTalk.preAttendedTransfer(target)
+      await bonTalk.preAttendedTransfer("outgoing", target)
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to attended transfer - invite`)
       console.error(error)
@@ -221,7 +221,7 @@ export default function useUA() {
   const attendedTransfer = async () => {
     if (!bonTalk) return
     try {
-      await bonTalk.attendedTransfer()
+      await bonTalk.attendedTransfer("outgoing", "attendedRefer")
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to attended transfer - transfer`)
       console.error(error)
