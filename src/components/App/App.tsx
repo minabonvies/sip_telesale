@@ -9,38 +9,61 @@ import Hide from "../Icons/hide"
 import Calling from "@/views/Calling"
 import useUA from "@/hooks/useUA"
 
-import ringtone from "@/assets/sounds/ringtone.wav"
+import { useView } from "@/Provider/ViewProvider"
+import { SessionState } from "sip.js"
+import { useState } from "react"
 
 export default function App() {
-  const bonTalk = useBonTalk()
+  const bonTalk = useBonTalk()!
+  const { view, setView } = useView()
+  const { audioCall, hangupCall } = useUA()
 
-  const { ringToneRef, c } = useUA()
+  const [currentCallNumber, setCurrentCallNumber] = useState<string>("")
+
+  const handleCall = async (numbers: string) => {
+    const inviter = await audioCall(numbers)
+    setCurrentCallNumber(numbers)
+    setView("IN_CALL")
+    inviter!.stateChange.addListener((state: SessionState) => {
+      switch (state) {
+        case SessionState.Terminated:
+          setView("KEY_PAD")
+          break
+      }
+    })
+  }
+
+  const handleHangClick = async () => {
+    await hangupCall()
+  }
 
   return (
     <>
-      <audio controls id={bonTalk!.audioElementId} />
-      <audio controls ref={ringToneRef} src={ringtone} />
       <AppContainer>
         <Header>
           {/* 上一步的按鈕？ */}
-          {/* <IconButton color="error" variant="ghost">
-          <Cancel />
-        </IconButton> */}
+          <IconButton color="error" variant="ghost">
+            <Cancel />
+          </IconButton>
           {/* 隱藏按鈕 */}
           <IconButton color="error" variant="ghost" onClick={() => bonTalk?.togglePanel()}>
             <Hide />
           </IconButton>
         </Header>
         <Content>
-          {c === "0" ? <KeyPad /> : null}
-          {c === "1" ? <IncomingCall /> : null}
-          {/* <IncomingCall /> */}
-          {/* <Calling /> */}
+          {view === "KEY_PAD" ? <KeyPad onCall={handleCall} /> : null}
+          {view === "RECEIVED_CALL" ? <IncomingCall /> : null}
+          {view === "IN_CALL" ? <Calling callTarget={currentCallNumber} onHangClick={handleHangClick} /> : null}
         </Content>
         <Footer>
           <Logo />
         </Footer>
       </AppContainer>
+
+      <button onClick={() => setView("KEY_PAD")}>KEYPAD</button>
+      <button onClick={() => setView("RECEIVED_CALL")}>RECEIVED_CALL</button>
+      <button onClick={() => setView("IN_CALL")}>IN_CALL</button>
+      <div>Current Login: {bonTalk.userAgentInstance.options.displayName}</div>
     </>
   )
 }

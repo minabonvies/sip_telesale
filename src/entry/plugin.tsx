@@ -17,11 +17,10 @@ import {
 import BonTalkError from "@/utils/BonTalkError"
 import ThemeProvider from "@/Provider/ThemeProvider"
 import ErrorBoundary from "@/components/ErrorBoundary"
+import ViewProvider from "@/Provider/ViewProvider"
+import AudioProvider from "@/Provider/AudioProvider"
 
 export default class BonTalk {
-  private rootId = "_bon_sip_phone_root"
-  private _audioElementId = "_bon_sip_phone_audio"
-
   private buttonElementId: string
   // private buttonElement: HTMLElement | null = null
   private rootElement: HTMLElement | null = null
@@ -41,6 +40,14 @@ export default class BonTalk {
   private registerExpires: number = 300
 
   private sessionManager: SessionManager = new SessionManager()
+
+  static get audioElementId() {
+    return "_bon_sip_phone_audio"
+  }
+
+  static get rootId() {
+    return "_bon_sip_phone_root"
+  }
 
   static makeURI(target: string) {
     const uri = UserAgent.makeURI(target)
@@ -131,13 +138,17 @@ export default class BonTalk {
   }
 
   get audioElementId() {
-    return this._audioElementId
+    return BonTalk.audioElementId
+  }
+
+  get rootId() {
+    return BonTalk.rootId
   }
 
   get audioElement() {
-    const element = document.getElementById(this._audioElementId)
+    const element = document.getElementById(this.audioElementId)
     if (!element) {
-      throw new BonTalkError(`[bonTalk] audioElement with id ${this._audioElementId} not found`)
+      throw new BonTalkError(`[bonTalk] audioElement with id ${this.audioElementId} not found`)
     }
     return element as HTMLMediaElement
   }
@@ -193,9 +204,9 @@ export default class BonTalk {
       },
     }
 
-    const audioElement = document.getElementById(this._audioElementId)
+    const audioElement = document.getElementById(this.audioElementId)
     if (!audioElement) {
-      throw new BonTalkError(`[bonTalk] audioElement with id ${this._audioElementId} not found`)
+      throw new BonTalkError(`[bonTalk] audioElement with id ${this.audioElementId} not found`)
     }
 
     const targetURI = BonTalk.makeURI(this.urlTemplate(target))
@@ -220,6 +231,7 @@ export default class BonTalk {
       }
     })
     await inviter.invite(invitationAcceptOptions)
+    return inviter
   }
 
   async answerCall(invitation: Invitation, as: SessionName) {
@@ -234,9 +246,9 @@ export default class BonTalk {
         },
       },
     }
-    const audioElement = document.getElementById(this._audioElementId)
+    const audioElement = document.getElementById(this.audioElementId)
     if (!audioElement) {
-      throw new BonTalkError(`[bonTalk] audioElement with id ${this._audioElementId} not found`)
+      throw new BonTalkError(`[bonTalk] audioElement with id ${this.audioElementId} not found`)
     }
     await invitation.accept(invitationAcceptOptions)
     this.sessionManager.addSession(as, invitation)
@@ -300,6 +312,9 @@ export default class BonTalk {
             })
           },
           onReject: () => {},
+        },
+        sessionDescriptionHandlerOptions: {
+          hold,
         },
       }
       await currentSession.invite(options)
@@ -407,7 +422,11 @@ export default class BonTalk {
       <ErrorBoundary>
         <ThemeProvider mode="dark">
           <BonTalkProvider value={this}>
-            <App />
+            <AudioProvider>
+              <ViewProvider>
+                <App />
+              </ViewProvider>
+            </AudioProvider>
           </BonTalkProvider>
         </ThemeProvider>
       </ErrorBoundary>

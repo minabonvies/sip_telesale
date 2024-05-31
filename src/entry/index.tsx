@@ -10,9 +10,9 @@ const bonTalk = new BonTalk({
   buttonElementId: "", // for dev, no need to render button
   wsServer: "wss://demo.sip.telesale.org:7443/ws",
   domains: ["demo.sip.telesale.org"],
-  username: "3002",
+  username: "3003",
   password: "42633506",
-  displayName: "3002 Mina",
+  displayName: "3003 Charlie",
 })
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

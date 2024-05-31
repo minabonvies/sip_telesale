@@ -1,13 +1,29 @@
+import { useEffect } from "react"
 import styled from "@emotion/styled"
 import ViewContainer from "@/components/ViewContainer"
 import ActionPad, { type ActionButtonType } from "@/components/ActionPad"
 import Menu from "@/components/Menu"
+import useTimer from "@/hooks/useTimer"
 
-export default function Calling() {
+type CallingProps = {
+  callTarget: string
+  onHangClick: () => void
+}
+
+export default function Calling(props: CallingProps) {
+  const { time, start, stop } = useTimer()
+  // seconds to hh:mm:ss
+  const formattedTime = new Date(time * 1000).toISOString().slice(11, 19)
+
+  useEffect(() => {
+    start()
+  }, [])
+
   const handleActionPress = (action: ActionButtonType) => {
     switch (action) {
       case "HANG":
-        console.log("HANG")
+        props.onHangClick()
+        stop()
         break
       default:
         // DO NOT ACCEPT OTHER STUFF
@@ -17,9 +33,9 @@ export default function Calling() {
 
   return (
     <ViewContainer>
-      <CallingTargetTitle>123</CallingTargetTitle>
+      <CallingTargetTitle>{props.callTarget}</CallingTargetTitle>
       <div style={{ height: "24px" }} />
-      <Timer>00:00:01</Timer>
+      <Timer>{formattedTime}</Timer>
       <div style={{ flex: 1 }} />
       <Menu />
       <div style={{ flex: 1 }} />

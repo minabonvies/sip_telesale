@@ -1,20 +1,32 @@
 import { useState } from "react"
-import ringtone_file from "./assets/sounds/ringtone.wav"
+// import ringtone_file from "./assets/sounds/ringtone.wav"
 
-import dtmf_file from "./assets/sounds/dtmf.wav"
+// import dtmf_file from "./assets/sounds/dtmf.wav"
 import useUA from "./hooks/useUA/index"
 import { useBonTalk } from "./Provider/BonTalkProvider"
 
 export default function Playground() {
   const bonTalk = useBonTalk()
-  const { audioRef, ringToneRef, dtmfRef, audioCall, answerCall, rejectCall, hangupCall, setHold, invitationRef, sendDTMF, setMute, blindTransfer, attendedTransfer, preAttendedTransfer } = useUA()
+  const {
+    audioCall,
+    answerCall,
+    rejectCall,
+    hangupCall,
+    setHold,
+    // invitationRef,
+    sendDTMF,
+    setMute,
+    blindTransfer,
+    attendedTransfer,
+    preAttendedTransfer,
+  } = useUA()
 
   const [isHold, setIsHold] = useState(false)
   const [isMute, setIsMute] = useState(false)
 
   const handleAudioCall = async () => {
     // TODO change to input
-    await audioCall("3002")
+    await audioCall("3004")
   }
 
   const handleAnswer = async () => {
@@ -52,9 +64,7 @@ export default function Playground() {
     await sendDTMF(tone)
   }
 
-  const handleDisplayKeypad = () => {
-
-  }
+  const handleDisplayKeypad = () => {}
 
   const handleBlindTransfer = () => {
     blindTransfer("3003")
@@ -70,11 +80,12 @@ export default function Playground() {
 
   return (
     <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", padding: "24px" }}>
-      <audio id={bonTalk!.audioElementId} ref={audioRef}></audio>
+      <button onClick={() => console.log(bonTalk)}>Check </button>
+      {/* <audio id={bonTalk!.audioElementId} ref={audioRef}></audio>
       <audio loop ref={ringToneRef} src={ringtone_file}></audio>
-      <audio ref={dtmfRef} src={dtmf_file}></audio>
-      {invitationRef ? <button onClick={handleAnswer}>Answer</button> : null}
-      {invitationRef ? <button onClick={handleReject}>Reject</button> : null}
+      <audio ref={dtmfRef} src={dtmf_file}></audio> */}
+      {/* {invitationRef ? <button onClick={handleAnswer}>Answer</button> : null}
+      {invitationRef ? <button onClick={handleReject}>Reject</button> : null} */}
       <button onClick={handleAudioCall}>Audio Call</button>
       <button onClick={handleHangUp}>Hang Up</button>
       <button onClick={handleHold}>{isHold ? "UnHold" : "Hold"}</button>

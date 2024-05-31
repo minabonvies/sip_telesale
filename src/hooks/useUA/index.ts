@@ -2,22 +2,15 @@ import { useEffect, useRef, useState } from "react"
 import { Invitation, SessionState, Referral } from "sip.js"
 import { useBonTalk } from "@/Provider/BonTalkProvider"
 import BonTalk from "@/entry/plugin"
+import { useAudio } from "@/Provider/AudioProvider"
 
 // TODO: should rename to useCall
 export default function useUA() {
   const bonTalk = useBonTalk()
+  const { toggleRingTone, toggleDTMF } = useAudio()
 
-  // TODO 評估是否移除
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const ringToneRef = useRef<HTMLAudioElement | null>(null)
-  const dtmfRef = useRef<HTMLAudioElement | null>(null)
-
-  const invitationRef = useRef<Invitation | null>(null)
-  const [invitation, setInvitation] = useState<Invitation | null>(null)
-
-  const [referral, setReferral] = useState<Referral | null>(null)
-
-  const [c, setC] = useState("0")
+  // const [invitation, setInvitation] = useState<Invitation | null>(null)
+  // const [referral, setReferral] = useState<Referral | null>(null)
 
   useEffect(() => {
     if (!bonTalk) return
@@ -27,9 +20,8 @@ export default function useUA() {
 
       bonTalk?.addDelegate("onInvite", (invitation: Invitation) => {
         console.log(invitation)
-        startRingTone()
-        setInvitation(invitation)
-        setC("1")
+        toggleRingTone()
+        // setInvitation(invitation)
 
         invitation.stateChange.addListener((state: SessionState) => {
           switch (state) {
@@ -44,8 +36,7 @@ export default function useUA() {
             case SessionState.Terminating:
             case SessionState.Terminated:
               BonTalk.cleanupMedia(bonTalk?.audioElement)
-              stopRingTone()
-              setC("0")
+              toggleRingTone()
               break
             default:
               throw new Error("Unknown session state.")
@@ -92,7 +83,7 @@ export default function useUA() {
     if (!target) return
 
     try {
-      await bonTalk.audioCall(target, "outgoing")
+      return await bonTalk.audioCall(target, "outgoing")
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to place call`)
       console.error(error)
@@ -102,10 +93,10 @@ export default function useUA() {
 
   const answerCall = async () => {
     if (!bonTalk) return
-    if (!invitation) return
+    // if (!invitation) return
     try {
-      await bonTalk.answerCall(invitation, "incoming")
-      stopRingTone()
+      // await bonTalk.answerCall(invitation, "incoming")
+      toggleRingTone()
       console.log("已接聽電話")
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to answer call`)
@@ -116,10 +107,10 @@ export default function useUA() {
 
   const rejectCall = async () => {
     if (!bonTalk) return
-    if (!invitation) return
+    // if (!invitation) return
     try {
       await bonTalk.rejectCall("incoming")
-      stopRingTone()
+      toggleRingTone()
       console.log("拒接")
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to reject call`)
@@ -139,26 +130,6 @@ export default function useUA() {
     }
   }
 
-  const startRingTone = () => {
-    if (!ringToneRef.current) return
-
-    try {
-      ringToneRef.current.play()
-    } catch (e) {
-      console.log(e)
-    }
-  }
-
-  const stopRingTone = () => {
-    if (!ringToneRef.current) return
-
-    try {
-      ringToneRef.current.pause()
-    } catch (e) {
-      console.log(e)
-    }
-  }
-
   const setHold = async (hold: boolean) => {
     if (!bonTalk) return
     try {
@@ -175,20 +146,11 @@ export default function useUA() {
     bonTalk.toggleMicrophone(mute, "outgoing") // TODO: discuss?
   }
 
-  const dtmfTone = () => {
-    if (!dtmfRef.current) return
-    try {
-      dtmfRef.current.play()
-    } catch (e) {
-      console.log(e)
-    }
-  }
-
   const sendDTMF = async (tone: string) => {
     if (!bonTalk) return
     try {
       await bonTalk.sendDTMF(tone, "outgoing")
-      dtmfTone()
+      toggleDTMF()
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to send DTMF`)
       console.error(error)
@@ -230,20 +192,15 @@ export default function useUA() {
   }
 
   return {
-    audioRef,
-    ringToneRef,
-    dtmfRef,
     audioCall,
     answerCall,
     rejectCall,
     hangupCall,
     setHold,
-    invitationRef,
     sendDTMF,
     setMute,
     blindTransfer,
     preAttendedTransfer,
     attendedTransfer,
-    c,
   }
 }
