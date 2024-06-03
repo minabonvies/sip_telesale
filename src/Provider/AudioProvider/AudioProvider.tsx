@@ -5,7 +5,8 @@ import dtmf from "@/assets/sounds/dtmf.wav"
 import { useBonTalk } from "../BonTalkProvider"
 
 type AudioContextType = {
-  toggleRingTone: () => void
+  startRingTone: () => void
+  stopRingTone: () => void
   toggleDTMF: () => void
 }
 
@@ -25,14 +26,19 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
   const ringToneRef = useRef<HTMLAudioElement | null>(null)
   const dtmfRef = useRef<HTMLAudioElement | null>(null)
 
-  const toggleRingTone = () => {
+  const startRingTone = () => {
     if (!ringToneRef.current) return
     try {
-      if (ringToneRef.current.paused) {
-        ringToneRef.current.play()
-      } else {
-        ringToneRef.current.pause()
-      }
+      ringToneRef.current.play()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const stopRingTone = () => {
+    if (!ringToneRef.current) return
+    try {
+      ringToneRef.current.pause()
     } catch (err) {
       console.error(err)
     }
@@ -57,12 +63,13 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
   return (
     <AudioContext.Provider
       value={{
-        toggleRingTone,
+        startRingTone,
+        stopRingTone,
         toggleDTMF,
       }}
     >
       <audio controls={isDEV} id={bonTalk!.audioElementId} />
-      <audio controls={isDEV} ref={ringToneRef} src={ringtone} />
+      <audio loop controls={isDEV} ref={ringToneRef} src={ringtone} />
       <audio controls={isDEV} ref={dtmfRef} src={dtmf} />
       {children}
     </AudioContext.Provider>

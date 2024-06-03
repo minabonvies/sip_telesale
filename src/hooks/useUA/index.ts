@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from "react"
 import { Invitation, SessionState, Referral } from "sip.js"
 import { useBonTalk } from "@/Provider/BonTalkProvider"
-import BonTalk from "@/entry/plugin"
+import BonTalk, { SessionName } from "@/entry/plugin"
 import { useAudio } from "@/Provider/AudioProvider"
+import { useView } from "@/Provider/ViewProvider"
 
-// TODO: should rename to useCall
 export default function useUA() {
   const bonTalk = useBonTalk()
-  const { toggleRingTone, toggleDTMF } = useAudio()
+  const { startRingTone, stopRingTone, toggleDTMF } = useAudio()
+  const { setView } = useView()
+
+  const [receivedInvitation, setReceivedInvitation] = useState<Invitation | null>(null)
 
   // const [invitation, setInvitation] = useState<Invitation | null>(null)
   // const [referral, setReferral] = useState<Referral | null>(null)
@@ -19,56 +22,32 @@ export default function useUA() {
       await bonTalk?.login()
 
       bonTalk?.addDelegate("onInvite", (invitation: Invitation) => {
-        console.log(invitation)
-        toggleRingTone()
-        // setInvitation(invitation)
-
+        startRingTone()
+        setView("RECEIVED_CALL")
+        setReceivedInvitation(invitation)
         invitation.stateChange.addListener((state: SessionState) => {
+          console.log("STATE", state)
           switch (state) {
             case SessionState.Initial:
               break
             case SessionState.Establishing:
               break
             case SessionState.Established:
+              stopRingTone()
+              setView("IN_CALL")
               BonTalk.setupRemoteMedia(invitation, bonTalk?.audioElement)
-
+              setReceivedInvitation(null)
               break
             case SessionState.Terminating:
             case SessionState.Terminated:
+              stopRingTone()
+              setView("KEY_PAD")
               BonTalk.cleanupMedia(bonTalk?.audioElement)
-              toggleRingTone()
               break
             default:
               throw new Error("Unknown session state.")
           }
         })
-      })
-
-      bonTalk?.addDelegate("onRefer", async (referral) => {
-        // if (acceptReferral()) {
-        //   await referral.accept()
-        //   const inviter =  referral.makeInviter()
-        //   await inviter.invite()
-        //   inviter.stateChange.addListener((state: SessionState) => {
-        //     switch (state) {
-        //       case SessionState.Initial:
-        //         break
-        //       case SessionState.Establishing:
-        //         break
-        //       case SessionState.Established:
-        //         // BonTalk.setupRemoteMedia(inviter, audioElement as HTMLMediaElement)
-        //         break
-        //       case SessionState.Terminating:
-        //       case SessionState.Terminated:
-        //         // BonTalk.cleanupMedia(audioElement as HTMLMediaElement)
-        //         break
-        //       default:
-        //         throw new Error("Unknown session state.")
-        //     }
-        //   })
-        // } else {
-        //   referral.reject()
-        // }
       })
     }
 
@@ -76,14 +55,12 @@ export default function useUA() {
     _login()
   }, [])
 
-  const acceptReferral = () => {}
-
-  const audioCall = async (target: string) => {
+  const audioCall = async (target: string, as: SessionName) => {
     if (!bonTalk) return
     if (!target) return
 
     try {
-      return await bonTalk.audioCall(target, "outgoing")
+      return await bonTalk.audioCall(target, as)
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to place call`)
       console.error(error)
@@ -93,10 +70,9 @@ export default function useUA() {
 
   const answerCall = async () => {
     if (!bonTalk) return
-    // if (!invitation) return
+    if (!receivedInvitation) return
     try {
-      // await bonTalk.answerCall(invitation, "incoming")
-      toggleRingTone()
+      await bonTalk.answerCall(receivedInvitation, "incoming")
       console.log("已接聽電話")
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to answer call`)
@@ -107,10 +83,9 @@ export default function useUA() {
 
   const rejectCall = async () => {
     if (!bonTalk) return
-    // if (!invitation) return
+    if (!receivedInvitation) return
     try {
-      await bonTalk.rejectCall("incoming")
-      toggleRingTone()
+      await bonTalk.rejectCall(receivedInvitation)
       console.log("拒接")
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to reject call`)
@@ -119,10 +94,10 @@ export default function useUA() {
     }
   }
 
-  const hangupCall = async () => {
+  const hangupCall = async (target: SessionName) => {
     if (!bonTalk) return
     try {
-      await bonTalk.hangupCall("outgoing")
+      await bonTalk.hangupCall(target)
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to hangup call`)
       console.error(error)
@@ -192,6 +167,7 @@ export default function useUA() {
   }
 
   return {
+    receivedInvitation,
     audioCall,
     answerCall,
     rejectCall,

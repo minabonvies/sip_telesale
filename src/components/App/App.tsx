@@ -16,29 +16,45 @@ import { useState } from "react"
 export default function App() {
   const bonTalk = useBonTalk()!
   const { view, setView } = useView()
-  const { audioCall, hangupCall } = useUA()
-
+  const { receivedInvitation, audioCall, hangupCall, answerCall, rejectCall } = useUA()
+  const [currentCallingTarget, setCurrentCallingTarget] = useState<string>("")
   const [currentCallNumber, setCurrentCallNumber] = useState<string>("")
 
+  const incomingSession = bonTalk.sessionManager.getSession("incoming")
+
   const handleCall = async (numbers: string) => {
-    const inviter = await audioCall(numbers)
+    const inviter = await audioCall(numbers, "outgoing")
     setCurrentCallNumber(numbers)
     setView("IN_CALL")
+    setCurrentCallingTarget("outgoing")
     inviter!.stateChange.addListener((state: SessionState) => {
       switch (state) {
         case SessionState.Terminated:
           setView("KEY_PAD")
+          setCurrentCallingTarget("")
           break
       }
     })
   }
 
+  const handleAccept = async () => {
+    setCurrentCallingTarget("incoming")
+    await answerCall()
+  }
+
+  const handleReject = async () => {
+    setCurrentCallingTarget("")
+    await rejectCall()
+  }
+
   const handleHangClick = async () => {
-    await hangupCall()
+    setCurrentCallingTarget("")
+    await hangupCall(currentCallingTarget)
   }
 
   return (
     <>
+      <button onClick={() => console.log(bonTalk.sessionManager.getSession("incoming"))}>123</button>
       <AppContainer>
         <Header>
           {/* 上一步的按鈕？ */}
@@ -52,8 +68,12 @@ export default function App() {
         </Header>
         <Content>
           {view === "KEY_PAD" ? <KeyPad onCall={handleCall} /> : null}
-          {view === "RECEIVED_CALL" ? <IncomingCall /> : null}
-          {view === "IN_CALL" ? <Calling callTarget={currentCallNumber} onHangClick={handleHangClick} /> : null}
+          {view === "RECEIVED_CALL" ? (
+            <IncomingCall displayTitle={receivedInvitation?.request.from._displayName} onAccept={handleAccept} onReject={handleReject} />
+          ) : null}
+          {view === "IN_CALL" ? (
+            <Calling callTarget={currentCallNumber || incomingSession.request.from._displayName} onHangClick={handleHangClick} />
+          ) : null}
         </Content>
         <Footer>
           <Logo />

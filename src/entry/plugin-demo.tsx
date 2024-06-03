@@ -9,4 +9,4 @@ const bonTalk = new BonTalk({
   displayName: "3003 Charlie",
 })
 
-bonTalk.render()
+bonTalk.init()

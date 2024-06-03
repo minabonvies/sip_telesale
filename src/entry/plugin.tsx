@@ -39,7 +39,7 @@ export default class BonTalk {
   private registerer: Registerer | null = null
   private registerExpires: number = 300
 
-  private sessionManager: SessionManager = new SessionManager()
+  public sessionManager: SessionManager = new SessionManager()
 
   static get audioElementId() {
     return "_bon_sip_phone_audio"
@@ -254,12 +254,7 @@ export default class BonTalk {
     this.sessionManager.addSession(as, invitation)
   }
 
-  async rejectCall(sessionName: SessionName) {
-    const invitation = this.sessionManager.getSession(sessionName)
-
-    if (!(invitation instanceof Invitation)) {
-      throw new BonTalkError("[bonTalk] invitation is not an instance of Invitation")
-    }
+  async rejectCall(invitation: Invitation) {
     if (!invitation) {
       throw new BonTalkError("[bonTalk] invitation not initialized")
     }
@@ -393,7 +388,7 @@ export default class BonTalk {
   /**
    * render the panel, should only call once on every instance
    */
-  render() {
+  init() {
     if (this.reactRoot) {
       throw new BonTalkError("[bonTalk] already rendered")
     }
@@ -477,7 +472,7 @@ export default class BonTalk {
   }
 }
 
-type SessionName = "incoming" | "outgoing" | "attendedRefer"
+export type SessionName = "incoming" | "outgoing" | "attendedRefer"
 type SessionMap = {
   incoming: Invitation
   outgoing: Inviter
