@@ -37,7 +37,7 @@ const theme = {
         primary: "rgba(250,250,250,1)",
       },
       transparent: "#00000000",
-      action: { press: "rgba(0,0,0,0.6)", disabled: "rgba(255, 255, 255, 0.3)" },
+      action: { press: "rgba(0,0,0,0.6)", active: "rgba(188, 255, 255, 1)", disabled: "rgba(255, 255, 255, 0.3)" },
     },
     dark: {
       primary: {
@@ -63,7 +63,7 @@ const theme = {
         primary: "rgba(250,250,250,1)",
       },
       transparent: "#00000000",
-      action: { press: "rgba(0,0,0,0.6)", disabled: "rgba(255, 255, 255, 0.3)" },
+      action: { press: "rgba(0,0,0,0.6)", active: "rgba(188, 255, 255, 1)", disabled: "rgba(255, 255, 255, 0.3)" },
     },
   },
   typography: {

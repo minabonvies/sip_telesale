@@ -263,7 +263,7 @@ export default class BonTalk {
   }
 
   async hangupCall(sessionName: SessionName) {
-    const currentSession = this.sessionManager.getSession(sessionName)
+    const { session: currentSession } = this.sessionManager.getSession(sessionName)
     switch (currentSession.state) {
       case SessionState.Initial:
       case SessionState.Establishing:
@@ -287,25 +287,12 @@ export default class BonTalk {
   }
 
   async setHold(hold: boolean, sessionName: SessionName) {
-    const currentSession = this.sessionManager.getSession(sessionName)
+    console.log(`[setHold] to switch hold to ${hold}, sessionName: ${sessionName}`)
+    const { session: currentSession } = this.sessionManager.getSession(sessionName)
 
     if (currentSession.state === SessionState.Established) {
       const options: SessionInviteOptions = {
         requestDelegate: {
-          onAccept: () => {
-            // @ts-expect-error sip.js types are not up to date
-            const pc = currentSession.sessionDescriptionHandler!.peerConnection
-            // @ts-expect-error sip.js types are not up to date
-            // Stop all the inbound streams
-            pc.getReceivers().forEach((RTCRtpReceiver) => {
-              if (RTCRtpReceiver.track) RTCRtpReceiver.track.enabled = !hold
-            })
-            // @ts-expect-error sip.js types are not up to date
-            // Stop all the outbound streams (especially useful for Conference Calls!!)
-            pc.getSenders().forEach(function (RTCRtpSender) {
-              RTCRtpSender.track.enabled = !hold
-            })
-          },
           onReject: () => {},
         },
         sessionDescriptionHandlerOptions: {
@@ -313,6 +300,12 @@ export default class BonTalk {
         },
       }
       await currentSession.invite(options)
+
+      if (hold) {
+        this.sessionManager.holdSession(sessionName)
+      } else {
+        this.sessionManager.unHoldSession(sessionName)
+      }
     }
   }
 
@@ -321,7 +314,7 @@ export default class BonTalk {
    * @param mute - Mute on if true, off if false.
    */
   toggleMicrophone(mute: boolean, sessionName: SessionName) {
-    const currentSession = this.sessionManager.getSession(sessionName)
+    const { session: currentSession } = this.sessionManager.getSession(sessionName)
     // @ts-expect-error sip.js types are not up to date
     currentSession.sessionDescriptionHandler!.peerConnection.getLocalStreams().forEach(function (stream) {
       // @ts-expect-error sip.js types are not up to date
@@ -329,10 +322,17 @@ export default class BonTalk {
         track.enabled = !mute
       })
     })
+
+    if (mute) {
+      this.sessionManager.muteSession(sessionName)
+    } else {
+      this.sessionManager.unmuteSession(sessionName)
+    }
+    // MUTE HOLD NEED TO STATE
   }
 
   async sendDTMF(tone: string, sessionName: SessionName) {
-    const currentSession = this.sessionManager.getSession(sessionName)
+    const { session: currentSession } = this.sessionManager.getSession(sessionName)
     if (!currentSession) {
       throw new BonTalkError("[bonTalk] session not initialized")
     }
@@ -353,7 +353,7 @@ export default class BonTalk {
     if (!newTarget) {
       throw new BonTalkError("[bonTalk] new target is not defined")
     }
-    const currentSession = this.sessionManager.getSession(from)
+    const { session: currentSession } = this.sessionManager.getSession(from)
 
     if (!currentSession) {
       throw new BonTalkError("[bonTalk] session not initialized")
@@ -369,12 +369,12 @@ export default class BonTalk {
   }
 
   async attendedTransfer(from: SessionName, target: SessionName) {
-    const firstSession = this.sessionManager.getSession(from)
+    const { session: firstSession } = this.sessionManager.getSession(from)
     if (!firstSession) {
       throw new BonTalkError("[bonTalk] first session not initialized")
     }
 
-    const secondSession = this.sessionManager.getSession(target)
+    const { session: secondSession } = this.sessionManager.getSession(target)
     if (!secondSession) {
       throw new BonTalkError("[bonTalk] second session not initialized")
     }
@@ -488,6 +488,8 @@ class SessionManager {
    * }
    */
   private sessions: Map<SessionName, Inviter | Invitation | unknown> = new Map()
+  private mute: Map<SessionName, boolean> = new Map()
+  private hold: Map<SessionName, boolean> = new Map()
 
   constructor() {}
 
@@ -497,13 +499,45 @@ class SessionManager {
 
   addSession<T extends SessionName>(type: T, session: SessionMap[T]) {
     this.sessions.set(type, session)
+    this.mute.set(type, false)
+    this.hold.set(type, false)
   }
 
   getSession<T extends SessionName>(type: T) {
-    return this.sessions.get(type) as SessionMap[T]
+    return {
+      isMuted: this.mute.get(type) ?? false,
+      isHold: this.hold.get(type) ?? false,
+      session: this.sessions.get(type) as SessionMap[T],
+    }
   }
 
   removeSession<T extends SessionName>(type: T) {
     this.sessions.delete(type)
+    this.mute.delete(type)
+    this.hold.delete(type)
+  }
+
+  muteSession<T extends SessionName>(type: T) {
+    this.mute.set(type, true)
+  }
+
+  unmuteSession<T extends SessionName>(type: T) {
+    this.mute.set(type, false)
+  }
+
+  isSessionMuted<T extends SessionName>(type: T) {
+    return this.mute.get(type) ?? false
+  }
+
+  holdSession<T extends SessionName>(type: T) {
+    this.hold.set(type, true)
+  }
+
+  unHoldSession<T extends SessionName>(type: T) {
+    this.hold.set(type, false)
+  }
+
+  isSessionHold<T extends SessionName>(type: T) {
+    return this.hold.get(type) ?? false
   }
 }

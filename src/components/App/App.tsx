@@ -12,15 +12,16 @@ import useUA from "@/hooks/useUA"
 import { useView } from "@/Provider/ViewProvider"
 import { SessionState } from "sip.js"
 import { useState } from "react"
+import { SessionName } from "@/entry/plugin"
 
 export default function App() {
   const bonTalk = useBonTalk()!
   const { view, setView } = useView()
-  const { receivedInvitation, audioCall, hangupCall, answerCall, rejectCall } = useUA()
-  const [currentCallingTarget, setCurrentCallingTarget] = useState<string>("")
+  const { receivedInvitation, audioCall, hangupCall, answerCall, rejectCall, setMute, setHold } = useUA()
+  const [currentCallingTarget, setCurrentCallingTarget] = useState<SessionName | "">("")
   const [currentCallNumber, setCurrentCallNumber] = useState<string>("")
 
-  const incomingSession = bonTalk.sessionManager.getSession("incoming")
+  const { session: incomingSession } = bonTalk.sessionManager.getSession("incoming")
 
   const handleCall = async (numbers: string) => {
     const inviter = await audioCall(numbers, "outgoing")
@@ -48,8 +49,23 @@ export default function App() {
   }
 
   const handleHangClick = async () => {
+    if (!currentCallingTarget) return
     setCurrentCallingTarget("")
     await hangupCall(currentCallingTarget)
+  }
+
+  const handleMuteClick = () => {
+    if (!currentCallingTarget) return
+    const { isMuted } = bonTalk.sessionManager.getSession(currentCallingTarget)
+    setMute(!isMuted, currentCallingTarget)
+  }
+
+  const handleHoldClick = () => {
+    if (!currentCallingTarget) return
+    const { isHold } = bonTalk.sessionManager.getSession(currentCallingTarget)
+
+    console.log("isHold", isHold, currentCallingTarget)
+    setHold(!isHold, currentCallingTarget)
   }
 
   return (
@@ -71,8 +87,14 @@ export default function App() {
           {view === "RECEIVED_CALL" ? (
             <IncomingCall displayTitle={receivedInvitation?.request.from._displayName} onAccept={handleAccept} onReject={handleReject} />
           ) : null}
-          {view === "IN_CALL" ? (
-            <Calling callTarget={currentCallNumber || incomingSession.request.from._displayName} onHangClick={handleHangClick} />
+          {view === "IN_CALL" && currentCallingTarget ? (
+            <Calling
+              sessionName={currentCallingTarget}
+              callTarget={currentCallNumber || incomingSession?.request.from._displayName || "123"}
+              onHangClick={handleHangClick}
+              onHoldClick={handleHoldClick}
+              onMuteClick={handleMuteClick}
+            />
           ) : null}
         </Content>
         <Footer>

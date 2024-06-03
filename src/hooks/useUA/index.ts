@@ -11,7 +11,6 @@ export default function useUA() {
   const { setView } = useView()
 
   const [receivedInvitation, setReceivedInvitation] = useState<Invitation | null>(null)
-
   // const [invitation, setInvitation] = useState<Invitation | null>(null)
   // const [referral, setReferral] = useState<Referral | null>(null)
 
@@ -105,10 +104,10 @@ export default function useUA() {
     }
   }
 
-  const setHold = async (hold: boolean) => {
+  const setHold = async (hold: boolean, target: SessionName) => {
     if (!bonTalk) return
     try {
-      await bonTalk.setHold(hold, "outgoing")
+      await bonTalk.setHold(hold, target)
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to hold call`)
       console.error(error)
@@ -116,9 +115,9 @@ export default function useUA() {
     }
   }
 
-  const setMute = (mute: boolean) => {
+  const setMute = (mute: boolean, target: SessionName) => {
     if (!bonTalk) return
-    bonTalk.toggleMicrophone(mute, "outgoing") // TODO: discuss?
+    bonTalk.toggleMicrophone(mute, target)
   }
 
   const sendDTMF = async (tone: string) => {
