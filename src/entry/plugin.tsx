@@ -13,6 +13,8 @@ import {
   UserAgent,
   UserAgentDelegate,
   SessionInviteOptions,
+  InviterOptions,
+  SessionInfoOptions,
 } from "sip.js"
 import BonTalkError from "@/utils/BonTalkError"
 import ThemeProvider from "@/Provider/ThemeProvider"
@@ -184,22 +186,19 @@ export default class BonTalk {
     if (!this.userAgent) {
       throw new BonTalkError("[bonTalk] userAgent not initialized")
     }
-    const invitationAcceptOptions: InvitationAcceptOptions = {
-      sessionDescriptionHandlerOptions: {
-        constraints: {
-          audio: true,
-          video: false,
-        },
-      },
-    }
 
     const audioElement = document.getElementById(this._audioElementId)
     if (!audioElement) {
       throw new BonTalkError(`[bonTalk] audioElement with id ${this._audioElementId} not found`)
     }
 
+    // send ticket ids
+    const inviterOptions: InviterOptions = {
+      extraHeaders: ["X-Ticket-Id:taiwan bonvies ticket system"]
+    }
+
     const targetURI = BonTalk.makeURI(this.urlTemplate(target))
-    const inviter = new Inviter(this.userAgent, targetURI)
+    const inviter = new Inviter(this.userAgent, targetURI, inviterOptions)
     inviter.stateChange.addListener((state: SessionState) => {
       switch (state) {
         case SessionState.Initial:
@@ -219,7 +218,7 @@ export default class BonTalk {
           throw new Error("Unknown session state.")
       }
     })
-    await inviter.invite(invitationAcceptOptions)
+    await inviter.invite()
   }
 
   async answerCall(invitation: Invitation, as: SessionName) {
@@ -299,7 +298,7 @@ export default class BonTalk {
               RTCRtpSender.track.enabled = !hold
             })
           },
-          onReject: () => {},
+          onReject: () => { },
         },
       }
       await currentSession.invite(options)
@@ -326,7 +325,7 @@ export default class BonTalk {
     if (!currentSession) {
       throw new BonTalkError("[bonTalk] session not initialized")
     }
-    const sessionInfoOptions = {
+    const sessionInfoOptions: SessionInfoOptions = {
       requestOptions: {
         body: {
           contentDisposition: "render",
@@ -475,7 +474,7 @@ class SessionManager {
    */
   private sessions: Map<SessionName, Inviter | Invitation | unknown> = new Map()
 
-  constructor() {}
+  constructor() { }
 
   getSessions() {
     return this.sessions

@@ -7,14 +7,14 @@ import { useBonTalk } from "./Provider/BonTalkProvider"
 
 export default function Playground() {
   const bonTalk = useBonTalk()
-  const { audioRef, ringToneRef, dtmfRef, audioCall, answerCall, rejectCall, hangupCall, setHold, invitationRef, sendDTMF, setMute, blindTransfer, attendedTransfer, preAttendedTransfer } = useUA()
+  const { audioRef, ringToneRef, dtmfRef, audioCall, answerCall, rejectCall, hangupCall, setHold, invitationRef, sendDTMF, setMute, blindTransfer, attendedTransfer, preAttendedTransfer,sendMsg } = useUA()
 
   const [isHold, setIsHold] = useState(false)
   const [isMute, setIsMute] = useState(false)
 
   const handleAudioCall = async () => {
     // TODO change to input
-    await audioCall("3002")
+    await audioCall("3001")
   }
 
   const handleAnswer = async () => {
