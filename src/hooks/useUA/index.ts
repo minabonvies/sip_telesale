@@ -132,10 +132,10 @@ export default function useUA() {
     }
   }
 
-  const blindTransfer = async (target: string) => {
+  const blindTransfer = async (from: SessionName, to: string) => {
     if (!bonTalk) return
     try {
-      await bonTalk.blindTransfer("outgoing", target)
+      await bonTalk.blindTransfer(from, to)
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to blind transfer`)
       console.error(error)

@@ -13,7 +13,7 @@ import Calling from "@/views/Calling"
 export default function App() {
   const bonTalk = useBonTalk()!
   const { view, setView } = useView()
-  const { receivedInvitation, audioCall, hangupCall, answerCall, rejectCall, setMute, setHold } = useUA()
+  const { receivedInvitation, audioCall, hangupCall, answerCall, rejectCall, setMute, setHold, blindTransfer } = useUA()
   const [currentCallingTarget, setCurrentCallingTarget] = useState<SessionName | "">("")
   const [currentCallNumber, setCurrentCallNumber] = useState<string>("")
 
@@ -64,6 +64,13 @@ export default function App() {
     setHold(!isHold, currentCallingTarget)
   }
 
+  const handleForwardClick = async (number: string) => {
+    if (!currentCallingTarget) return
+    await blindTransfer(currentCallingTarget, number)
+  }
+
+  const handlePreForwardClick = async (number: string) => {}
+
   return (
     <>
       <button onClick={() => console.log(bonTalk.sessionManager.getSession("incoming"))}>123</button>
@@ -75,11 +82,12 @@ export default function App() {
           ) : null}
           {view === "IN_CALL" ? (
             <Calling
-              sessionName={currentCallingTarget}
+              currentSessionName={currentCallingTarget}
               callTarget={currentCallNumber || incomingSession?.request.from._displayName || "123"}
               onHangClick={handleHangClick}
               onHoldClick={handleHoldClick}
               onMuteClick={handleMuteClick}
+              onForwardClick={handleForwardClick}
             />
           ) : null}
           <ContentFooter>

@@ -16,9 +16,11 @@ type Props = {
 
   isMuted?: boolean
   isHold?: boolean
+  disabledTransfer?: boolean
 }
 export default function Menu(props: Props) {
-  const { onMuteClick, onHoldClick, onKeyPadClick, onVideoClick, onSwitchClick, onPreForwardClick, isMuted, isHold } = props
+  const { onMuteClick, onHoldClick, onKeyPadClick, onVideoClick, onSwitchClick, onPreForwardClick, isMuted, isHold, disabledTransfer } =
+    props
 
   return (
     <MenuContainer>
@@ -38,11 +40,11 @@ export default function Menu(props: Props) {
         <VideoOutlined />
         <MenuText>視訊</MenuText>
       </MenuButton>
-      <MenuButton onClick={onSwitchClick}>
+      <MenuButton onClick={onSwitchClick} disabled={disabledTransfer}>
         <Switch />
         <MenuText>轉接</MenuText>
       </MenuButton>
-      <MenuButton onClick={onPreForwardClick}>
+      <MenuButton onClick={onPreForwardClick} disabled={disabledTransfer}>
         <PreForward />
         <MenuText>通話轉</MenuText>
       </MenuButton>

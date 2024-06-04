@@ -10,14 +10,16 @@ import KeyPad from "../KeyPad"
 import NumberPad from "@/components/NumberPad"
 import Header from "@/components/Header"
 import useInputKeys from "@/hooks/useInputKeys"
+import { Inviter } from "sip.js"
 
 type CallingProps = {
-  sessionName: SessionName
+  currentSessionName: SessionName | ""
   callTarget: string
   onHangClick: () => void
   onHoldClick: () => void
   onMuteClick: () => void
-  onKeyPadClick: () => void
+  // onKeyPadClick: () => void
+  onForwardClick: (number: string) => void
 }
 
 let listeners: ((...argus: unknown[]) => unknown)[] = []
@@ -29,16 +31,20 @@ function subscribe(listener: (...argus: unknown[]) => unknown) {
 export default function Calling(props: CallingProps) {
   const bonTalk = useBonTalk()!
 
-  const isMuted = useSyncExternalStore(subscribe, () => bonTalk.sessionManager.getSession(props.sessionName).isMuted)
-  const isHold = useSyncExternalStore(subscribe, () => bonTalk.sessionManager.getSession(props.sessionName).isHold)
+  const isMuted = useSyncExternalStore(subscribe, () => bonTalk.sessionManager.getSession(props.currentSessionName).isMuted)
+  const isHold = useSyncExternalStore(subscribe, () => bonTalk.sessionManager.getSession(props.currentSessionName).isHold)
 
   const [openKeyPad, setOpenKeyPad] = useState(false)
   const [actionPayType, setActionPadType] = useState<"CALLING" | "DTMF" | "FORWARD" | "PRE_FORWARD" | "DEFAULT">("DEFAULT")
   const { inputKeys, enterKey, deleteKey } = useInputKeys()
 
   const { time, start, stop } = useTimer()
+  const { time: time2, start: start2, stop: stop2 } = useTimer()
   // seconds to hh:mm:ss
   const formattedTime = new Date(time * 1000).toISOString().slice(11, 19)
+  const formattedTime2 = new Date(time2 * 1000).toISOString().slice(11, 19)
+
+  const [preForwarder, setPreForwarder] = useState<Inviter | null>(null)
 
   useEffect(() => {
     start()
@@ -47,8 +53,19 @@ export default function Calling(props: CallingProps) {
   const handleActionPress = (action: ActionButtonType) => {
     switch (action) {
       case "HANG":
+        if (preForwarder) {
+          handlePreForwardHangup()
+          stop2()
+          return
+        }
         props.onHangClick()
         stop()
+        break
+      case "FORWARD":
+        props.onForwardClick(inputKeys)
+        break
+      case "PRE_FORWARD":
+        handlePreForwardSendCall()
         break
       case "DELETE":
         deleteKey()
@@ -70,7 +87,7 @@ export default function Calling(props: CallingProps) {
   const handleKeyPadClick = () => {
     setOpenKeyPad((p) => !p)
     setActionPadType("DTMF")
-    props.onKeyPadClick()
+    // props.onKeyPadClick()
   }
 
   const handleKeyPress = (key: string) => {
@@ -93,16 +110,38 @@ export default function Calling(props: CallingProps) {
     setActionPadType("PRE_FORWARD")
   }
 
+  const handlePreForwardSendCall = async () => {
+    if (!props.currentSessionName) return
+    console.log("pre forward send call")
+    const inviter = await bonTalk.preAttendedTransfer(props.currentSessionName, inputKeys)
+    setPreForwarder(inviter)
+    setOpenKeyPad(false)
+    start2()
+  }
+
+  const handlePreForwardHangup = async () => {
+    if (!preForwarder) return
+    await bonTalk.hangupCall("attendedRefer")
+    setPreForwarder(null)
+    stop2()
+  }
+
   return (
     <>
-      <Header showCancelButton={openKeyPad} onCancelClick={handleCancelClick} />
+      <Header
+        showInformation={Boolean(openKeyPad || preForwarder)}
+        informationTitle={props.callTarget}
+        time={formattedTime}
+        showCancelButton={openKeyPad}
+        onCancelClick={handleCancelClick}
+      />
       <ViewContainer>
         {/* 通話畫面 */}
         {!openKeyPad ? (
           <>
-            <CallingTargetTitle>{props.callTarget}</CallingTargetTitle>
+            <CallingTargetTitle>{preForwarder ? inputKeys : props.callTarget}</CallingTargetTitle>
             <div style={{ height: "24px" }} />
-            <Timer>{formattedTime}</Timer>
+            <Timer>{preForwarder ? formattedTime2 : formattedTime}</Timer>
             <div style={{ flex: 1 }} />
             <Menu
               isMuted={isMuted}
@@ -112,9 +151,10 @@ export default function Calling(props: CallingProps) {
               onKeyPadClick={handleKeyPadClick}
               onSwitchClick={handleSwitchClick}
               onPreForwardClick={handlePreForwardClick}
+              disabledTransfer={Boolean(preForwarder)}
             />
             <div style={{ flex: 1 }} />
-            <ActionPad actionType="CALLING" onButtonClick={handleActionPress} />
+            <ActionPad actionType={preForwarder ? "READY_FORWARD" : "CALLING"} onButtonClick={handleActionPress} />
           </>
         ) : null}
         {/* keypad usage / DTMF ? */}

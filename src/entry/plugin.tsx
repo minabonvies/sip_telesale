@@ -364,8 +364,8 @@ export default class BonTalk {
   }
 
   async preAttendedTransfer(from: SessionName, target: string) {
-    this.setHold(true, from)
-    this.audioCall(target, "attendedRefer")
+    await this.setHold(true, from)
+    return await this.audioCall(target, "attendedRefer")
   }
 
   async attendedTransfer(from: SessionName, target: SessionName) {

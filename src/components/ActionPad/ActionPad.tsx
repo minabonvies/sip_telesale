@@ -63,7 +63,7 @@ export default function ActionPad(props: Props) {
         <>
           <KeyPadButton color="success" text={<Switch />} onClick={() => props.onButtonClick?.("FORWARD")} />
           <div />
-          <KeyPadButton color="secondary" text={<Delete />} onClick={() => props.onButtonClick?.("DELETE")} />
+          <KeyPadButton color="error" text={<Hang />} onClick={() => props.onButtonClick?.("HANG")} />
         </>
       )}
 

@@ -6,6 +6,5 @@ const ContentHeader = styled.div({
   padding: "10px 16px",
   backgroundColor: "transparent",
   display: "flex",
-  justifyContent: "flex-end",
 })
 export default ContentHeader
