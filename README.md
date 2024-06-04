@@ -1,30 +1,69 @@
-# React + TypeScript + Vite
+# BonTalk Doc
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Features
 
-Currently, two official plugins are available:
+- A sip.js-based plugin
+- Developers can adjust the style and theme of BonTalk
+- BonTalk can be used as a phone call
+- BonTalk can be installed anywhere on your web platform
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Installation
 
-## Expanding the ESLint configuration
+### Package manager
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+use npm:
 
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+```jsx
+$ npm install BonTalk
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+### CDN
+
+```jsx
+
+```
+
+## Usage
+
+Register the extension and ready to call…
+
+```jsx
+import BonTalk from "BonTalk"
+
+// create an usable sip phone instance
+const bonTalk = new BonTalk({
+  buttonElementId: "bon-sip-button",
+  wsServer: "wss://bon.example.org:7443/ws",
+  domains: ["bon.example.org", "bon.example2.org"],
+  username: "3003",
+  password: "123456789",
+  displayName: "3003 John",
+})
+
+bonTalk.init()
+```
+
+Unregister and destroy the instance…
+
+```jsx
+bonTalk.destroy()
+```
+
+### Arguments
+
+| Argument        | Data Type | Description                                                                |
+| --------------- | --------- | -------------------------------------------------------------------------- |
+| buttonElementId | string    | a toggle id for opening or closing the BonTalk panel                       |
+| wsServer        | string    | an usable web socket server address                                        |
+| domains         | string[ ] | place multiple PBX domains or IPs to prevent any PBX from working properly |
+| username        | string    | authorization username of the extension                                    |
+| password        | string    | authorization password of the extension                                    |
+| displayName     | string    | display name of the extension                                              |
+
+## Instance Methods
+
+| Method         | Description                                                                                        |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| .init()        | render the panel and auto-register the agent’s extension, should only call once on every instance. |
+| .destroy()     | destroy the panel. should call before destroy the element.                                         |
+| .togglePanel() | open or close the panel.                                                                           |
