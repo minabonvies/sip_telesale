@@ -62,15 +62,23 @@ export default function Calling(props: CallingProps) {
         stop()
         break
       case "FORWARD":
+        if (preForwarder) {
+          if (!props.currentSessionName) return
+          bonTalk.attendedTransfer(props.currentSessionName, "attendedRefer")
+          return
+        }
+
         props.onForwardClick(inputKeys)
         break
       case "PRE_FORWARD":
         handlePreForwardSendCall()
         break
+
       case "DELETE":
         deleteKey()
         break
       default:
+        console.log(action)
         // DO NOT ACCEPT OTHER STUFF
         break
     }
