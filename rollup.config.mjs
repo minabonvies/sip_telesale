@@ -8,6 +8,7 @@ import mime from "mime-types"
 import fs from "fs"
 import path from "path"
 import url from "url"
+import terser from "@rollup/plugin-terser"
 
 const __filename = url.fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -69,5 +70,6 @@ export default {
         return null
       },
     },
+    terser(),
   ],
 }
