@@ -41,6 +41,8 @@ export default class BonTalk {
 
   public sessionManager: SessionManager = new SessionManager()
 
+  private themeColor?: string
+
   static get audioElementId() {
     return "_bon_sip_phone_audio"
   }
@@ -85,6 +87,7 @@ export default class BonTalk {
     username,
     password,
     displayName,
+    themeColor,
   }: {
     buttonElementId: string
     wsServer: string
@@ -92,6 +95,7 @@ export default class BonTalk {
     username: string
     password: string
     displayName: string
+    themeColor?: string
   }) {
     this.buttonElementId = buttonElementId
 
@@ -127,6 +131,8 @@ export default class BonTalk {
     this.registerer = new Registerer(this.userAgent, {
       expires: this.registerExpires,
     })
+
+    this.themeColor = themeColor
   }
 
   get userAgentInstance() {
@@ -415,7 +421,7 @@ export default class BonTalk {
     this.reactRoot = ReactDOM.createRoot(root)
     this.reactRoot.render(
       <ErrorBoundary>
-        <ThemeProvider mode="dark">
+        <ThemeProvider mode="dark" customThemeColor={this.themeColor}>
           <BonTalkProvider value={this}>
             <AudioProvider>
               <ViewProvider>

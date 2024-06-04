@@ -5,6 +5,7 @@ import { ThemeProvider as EmotionThemeProvider } from "@emotion/react"
 type Props = {
   children: React.ReactNode
   mode: "light" | "dark"
+  customThemeColor?: string
 }
 
 export default function ThemeProvider(props: Props) {
@@ -13,9 +14,9 @@ export default function ThemeProvider(props: Props) {
   return (
     <EmotionThemeProvider
       theme={{
-        ...theme,
+        ...theme(props.customThemeColor),
         colors: {
-          ...theme.colors[mode],
+          ...theme(props.customThemeColor).colors[mode],
         },
         colorMode: mode,
         toggleColorMode: () => setMode((prev) => (prev === "light" ? "dark" : "light")),

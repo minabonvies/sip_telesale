@@ -4,86 +4,88 @@ declare module "@emotion/react" {
   interface Theme {
     colorMode: "light" | "dark"
     toggleColorMode: () => void
-    colors: (typeof theme.colors)[keyof typeof theme.colors]
-    typography: typeof theme.typography
+    colors: ReturnType<typeof theme>["colors"][keyof ReturnType<typeof theme>["colors"]]
+    typography: ReturnType<typeof theme>["typography"]
     isColorToken: (token: string) => boolean
   }
 }
 
-const theme = {
-  isColorToken: isColorToken,
-  colors: {
-    light: {
-      primary: {
-        main: "#7BA9C6",
+const theme = (customPrimaryColor?: string) => {
+  return {
+    isColorToken: isColorToken,
+    colors: {
+      light: {
+        primary: {
+          main: customPrimaryColor || "#7BA9C6",
+        },
+        secondary: {
+          main: "#457EA2",
+        },
+        success: {
+          main: "#2FC182",
+        },
+        warning: {
+          main: "#F2C055",
+        },
+        error: {
+          main: "#FF4D4D",
+        },
+        background: {
+          default: "#3B3B3B",
+        },
+        text: {
+          white: "#FFFFFF",
+          primary: "rgba(250,250,250,1)",
+        },
+        transparent: "#00000000",
+        action: { press: "rgba(0,0,0,0.6)", active: "rgba(188, 255, 255, 1)", disabled: "rgba(255, 255, 255, 0.3)" },
       },
-      secondary: {
-        main: "#457EA2",
+      dark: {
+        primary: {
+          main: customPrimaryColor || "#7BA9C6",
+        },
+        secondary: {
+          main: "#457EA2",
+        },
+        success: {
+          main: "#2FC182",
+        },
+        warning: {
+          main: "#F2C055",
+        },
+        error: {
+          main: "#FF4D4D",
+        },
+        background: {
+          default: "#3B3B3B",
+        },
+        text: {
+          white: "#FFFFFF",
+          primary: "rgba(250,250,250,1)",
+        },
+        transparent: "#00000000",
+        action: { press: "rgba(0,0,0,0.6)", active: "rgba(188, 255, 255, 1)", disabled: "rgba(255, 255, 255, 0.3)" },
       },
-      success: {
-        main: "#2FC182",
-      },
-      warning: {
-        main: "#F2C055",
-      },
-      error: {
-        main: "#FF4D4D",
-      },
-      background: {
-        default: "#3B3B3B",
-      },
-      text: {
-        white: "#FFFFFF",
-        primary: "rgba(250,250,250,1)",
-      },
-      transparent: "#00000000",
-      action: { press: "rgba(0,0,0,0.6)", active: "rgba(188, 255, 255, 1)", disabled: "rgba(255, 255, 255, 0.3)" },
     },
-    dark: {
-      primary: {
-        main: "#7BA9C6",
+    typography: {
+      h1: {
+        fontSize: "24px",
+        fontStyle: "normal",
+        fontWeight: 400,
+        lineHeight: "normal",
       },
-      secondary: {
-        main: "#457EA2",
+      h2: {
+        fontSize: "16px",
+        fontStyle: "normal",
+        fontWeight: 400,
+        lineHeight: "normal",
       },
-      success: {
-        main: "#2FC182",
-      },
-      warning: {
-        main: "#F2C055",
-      },
-      error: {
-        main: "#FF4D4D",
-      },
-      background: {
-        default: "#3B3B3B",
-      },
-      text: {
-        white: "#FFFFFF",
-        primary: "rgba(250,250,250,1)",
-      },
-      transparent: "#00000000",
-      action: { press: "rgba(0,0,0,0.6)", active: "rgba(188, 255, 255, 1)", disabled: "rgba(255, 255, 255, 0.3)" },
     },
-  },
-  typography: {
-    h1: {
-      fontSize: "24px",
-      fontStyle: "normal",
-      fontWeight: 400,
-      lineHeight: "normal",
-    },
-    h2: {
-      fontSize: "16px",
-      fontStyle: "normal",
-      fontWeight: 400,
-      lineHeight: "normal",
-    },
-  },
-} as const
+  } as const
+}
 
 export function isColorToken(token: string) {
-  return token in theme.colors.light || token in theme.colors.dark
+  return token in theme().colors.light || token in theme().colors.dark
 }
 
 export function alpha(color: string, alpha: number): string {
