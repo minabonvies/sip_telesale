@@ -4,6 +4,8 @@ import useInputKeys from "@/hooks/useInputKeys"
 import ViewContainer from "@/components/ViewContainer"
 import NumberPad from "@/components/NumberPad"
 import ActionPad, { type ActionButtonType } from "@/components/ActionPad"
+import ContentHeader from "@/components/ContentHeader"
+import Header from "@/components/Header"
 
 type KeyPadProps = {
   onCall: (numbers: string) => void
@@ -32,13 +34,16 @@ export default function KeyPad(props: KeyPadProps) {
   }
 
   return (
-    <ViewContainer>
-      <KeysText>{inputKeys || "輸入號碼"}</KeysText>
-      <div style={{ height: "34px" }} />
-      <NumberPad onKeyPress={handleKeyPress} />
-      <div style={{ height: "32px" }} />
-      <ActionPad onButtonClick={handleActionPress} />
-    </ViewContainer>
+    <>
+      <Header />
+      <ViewContainer>
+        <KeysText>{inputKeys || "輸入號碼"}</KeysText>
+        <div style={{ height: "34px" }} />
+        <NumberPad onKeyPress={handleKeyPress} />
+        <div style={{ height: "32px" }} />
+        <ActionPad onButtonClick={handleActionPress} />
+      </ViewContainer>
+    </>
   )
 }
 

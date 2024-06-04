@@ -1,7 +1,9 @@
+import { useAudio } from "@/Provider/AudioProvider"
 import KeyPadButton from "../KeyPadButton"
 import KeyPadContainer from "../KeyPadContainer"
 
 type Props = {
+  dtmf?: boolean
   onKeyPress: (key: string) => void
 }
 
@@ -57,10 +59,19 @@ const KEYS = [
 ]
 
 export default function NumberPad(props: Props) {
+  const { toggleDTMF } = useAudio()
+
+  const handleKeyPress = (key: string) => {
+    props.onKeyPress(key)
+    if (props.dtmf) {
+      toggleDTMF()
+    }
+  }
+
   return (
     <KeyPadContainer>
       {KEYS.map((key) => (
-        <KeyPadButton key={key.text} text={key.text} subText={key.subText} onClick={() => props.onKeyPress(key.text)} />
+        <KeyPadButton key={key.text} text={key.text} subText={key.subText} onClick={() => handleKeyPress(key.text)} />
       ))}
     </KeyPadContainer>
   )

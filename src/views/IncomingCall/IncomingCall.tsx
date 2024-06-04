@@ -1,6 +1,7 @@
 import styled from "@emotion/styled"
 import ViewContainer from "@/components/ViewContainer"
 import ActionPad, { type ActionButtonType } from "@/components/ActionPad"
+import Header from "@/components/Header"
 
 type Props = {
   displayTitle: string
@@ -25,12 +26,15 @@ export default function IncomingCall(props: Props) {
     }
   }
   return (
-    <ViewContainer>
-      <div style={{ height: "56px" }} />
-      <IncomingTitle>{props.displayTitle}</IncomingTitle>
-      <div style={{ flex: 1 }} />
-      <ActionPad actionType="RECEIVED_CALL" onButtonClick={handleActionPress} />
-    </ViewContainer>
+    <>
+      <Header />
+      <ViewContainer>
+        <div style={{ height: "56px" }} />
+        <IncomingTitle>{props.displayTitle}</IncomingTitle>
+        <div style={{ flex: 1 }} />
+        <ActionPad actionType="RECEIVED_CALL" onButtonClick={handleActionPress} />
+      </ViewContainer>
+    </>
   )
 }
 
