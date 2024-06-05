@@ -1,9 +1,12 @@
 import { createContext, useContext, useState } from "react"
+import { SessionName } from "@/entry/plugin"
 
 type ViewName = "KEY_PAD" | "RECEIVED_CALL" | "IN_CALL"
 type ViewContextType = {
   view: ViewName
-  setView: (view: ViewName) => Promise<void>
+  setView: (view: ViewName) => void
+  currentCallingTarget: SessionName | ""
+  setCurrentCallingTarget: (target: SessionName | "") => void
 }
 
 const ViewContext = createContext<ViewContextType | null>(null)
@@ -18,16 +21,15 @@ export const useView = () => {
 
 export default function ViewProvider({ children }: { children: React.ReactNode }) {
   const [view, setView] = useState<ViewName>("KEY_PAD")
-
-  const handleSetView = async (view: ViewName) => {
-    setView(view)
-  }
+  const [currentCallingTarget, setCurrentCallingTarget] = useState<SessionName | "">("")
 
   return (
     <ViewContext.Provider
       value={{
         view,
-        setView: handleSetView,
+        setView,
+        currentCallingTarget,
+        setCurrentCallingTarget,
       }}
     >
       {children}

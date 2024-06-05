@@ -1,27 +1,28 @@
+import { useState } from "react"
 import styled from "@emotion/styled"
 import { SessionState } from "sip.js"
-import { useState } from "react"
 
-import { SessionName } from "@/entry/plugin"
 import { useBonTalk } from "@/Provider/BonTalkProvider"
 import { useView } from "@/Provider/ViewProvider"
 import useUA from "@/hooks/useUA"
 import KeyPad from "@/views/KeyPad"
 import IncomingCall from "@/views/IncomingCall"
 import Calling from "@/views/Calling"
+import { SessionName } from "@/entry/plugin"
 
 export default function App() {
   const bonTalk = useBonTalk()!
-  const { view, setView } = useView()
-  const { receivedInvitation, audioCall, hangupCall, answerCall, rejectCall, setMute, setHold, blindTransfer } = useUA()
-  const [currentCallingTarget, setCurrentCallingTarget] = useState<SessionName | "">("")
-  const [currentCallNumber, setCurrentCallNumber] = useState<string>("")
+  const { view, setView, currentCallingTarget, setCurrentCallingTarget } = useView()
+  const { audioCall, hangupCall, answerCall, rejectCall, setMute, setHold, blindTransfer, preAttendedTransfer, attendedTransfer } = useUA()
+  const [tempCurrentCallingTarget, setTempCurrentCallingTarget] = useState<SessionName | "">("")
 
-  const { session: incomingSession } = bonTalk.sessionManager.getSession("incoming")
+  // TODO: need state?
+  const currentSession = bonTalk.sessionManager.getSession(currentCallingTarget)
+
+  const callTargetTitle = currentSession?.name || ""
 
   const handleCall = async (numbers: string) => {
     const inviter = await audioCall(numbers, "outgoing")
-    setCurrentCallNumber(numbers)
     setView("IN_CALL")
     setCurrentCallingTarget("outgoing")
     inviter!.stateChange.addListener((state: SessionState) => {
@@ -52,42 +53,65 @@ export default function App() {
 
   const handleMuteClick = () => {
     if (!currentCallingTarget) return
-    const { isMuted } = bonTalk.sessionManager.getSession(currentCallingTarget)
-    setMute(!isMuted, currentCallingTarget)
+    const currentSession = bonTalk.sessionManager.getSession(currentCallingTarget)
+    setMute(!currentSession?.isMuted, currentCallingTarget)
   }
 
   const handleHoldClick = () => {
     if (!currentCallingTarget) return
-    const { isHold } = bonTalk.sessionManager.getSession(currentCallingTarget)
-
-    console.log("isHold", isHold, currentCallingTarget)
-    setHold(!isHold, currentCallingTarget)
+    const currentSession = bonTalk.sessionManager.getSession(currentCallingTarget)
+    setHold(!currentSession?.isHold, currentCallingTarget)
   }
 
   const handleForwardClick = async (number: string) => {
     if (!currentCallingTarget) return
+    if (currentCallingTarget === "attendedRefer") {
+      // TODO
+      await attendedTransfer("attendedRefer", "outgoing")
+      return
+    }
+
     await blindTransfer(currentCallingTarget, number)
   }
 
-  const handlePreForwardClick = async (number: string) => {}
+  const handlePreForwardSendCall = async (number: string) => {
+    if (!currentCallingTarget) return
+
+    const inviter = await preAttendedTransfer(currentCallingTarget, number)
+    const prevCurrentCallingTarget = currentCallingTarget
+    setTempCurrentCallingTarget(prevCurrentCallingTarget)
+    setCurrentCallingTarget("attendedRefer")
+    inviter!.stateChange.addListener((state: SessionState) => {
+      switch (state) {
+        case SessionState.Terminated:
+          setCurrentCallingTarget(prevCurrentCallingTarget)
+          setTempCurrentCallingTarget("")
+          break
+      }
+    })
+  }
 
   return (
     <>
-      <button onClick={() => console.log(bonTalk.sessionManager.getSession("incoming"))}>123</button>
+      <button onClick={() => console.log(bonTalk.sessionManager.getSession(currentCallingTarget))}>123</button>
       <AppContainer>
         <Content>
           {view === "KEY_PAD" ? <KeyPad onCall={handleCall} /> : null}
           {view === "RECEIVED_CALL" ? (
-            <IncomingCall displayTitle={receivedInvitation?.request.from._displayName} onAccept={handleAccept} onReject={handleReject} />
+            // TODO                      VVVVV
+            <IncomingCall displayTitle={"TEST"} onAccept={handleAccept} onReject={handleReject} />
           ) : null}
           {view === "IN_CALL" ? (
             <Calling
+              key={currentCallingTarget}
               currentSessionName={currentCallingTarget}
-              callTarget={currentCallNumber || incomingSession?.request.from._displayName || "123"}
+              callTarget={callTargetTitle}
+              prevTarget={tempCurrentCallingTarget}
               onHangClick={handleHangClick}
               onHoldClick={handleHoldClick}
               onMuteClick={handleMuteClick}
               onForwardClick={handleForwardClick}
+              onPreForwardSendCall={handlePreForwardSendCall}
             />
           ) : null}
           <ContentFooter>
@@ -99,7 +123,6 @@ export default function App() {
       <button onClick={() => setView("KEY_PAD")}>KEYPAD</button>
       <button onClick={() => setView("RECEIVED_CALL")}>RECEIVED_CALL</button>
       <button onClick={() => setView("IN_CALL")}>IN_CALL</button>
-      <div>Current Login: {bonTalk.userAgentInstance.options.displayName}</div>
     </>
   )
 }

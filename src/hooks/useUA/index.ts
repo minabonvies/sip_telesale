@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react"
-import { Invitation, SessionState, Referral } from "sip.js"
+import { useEffect, useState } from "react"
+import { Invitation, SessionState } from "sip.js"
 import { useBonTalk } from "@/Provider/BonTalkProvider"
 import BonTalk, { SessionName } from "@/entry/plugin"
 import { useAudio } from "@/Provider/AudioProvider"
@@ -8,11 +8,9 @@ import { useView } from "@/Provider/ViewProvider"
 export default function useUA() {
   const bonTalk = useBonTalk()
   const { startRingTone, stopRingTone, toggleDTMF } = useAudio()
-  const { setView } = useView()
+  const { setView, setCurrentCallingTarget } = useView()
 
   const [receivedInvitation, setReceivedInvitation] = useState<Invitation | null>(null)
-  // const [invitation, setInvitation] = useState<Invitation | null>(null)
-  // const [referral, setReferral] = useState<Referral | null>(null)
 
   useEffect(() => {
     if (!bonTalk) return
@@ -34,6 +32,7 @@ export default function useUA() {
             case SessionState.Established:
               stopRingTone()
               setView("IN_CALL")
+              setCurrentCallingTarget("incoming")
               BonTalk.setupRemoteMedia(invitation, bonTalk?.audioElement)
               setReceivedInvitation(null)
               break
@@ -143,10 +142,10 @@ export default function useUA() {
     }
   }
 
-  const preAttendedTransfer = async (target: string) => {
+  const preAttendedTransfer = async (from: SessionName, to: string) => {
     if (!bonTalk) return
     try {
-      await bonTalk.preAttendedTransfer("outgoing", target)
+      return await bonTalk.preAttendedTransfer(from, to)
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to attended transfer - invite`)
       console.error(error)
@@ -154,10 +153,10 @@ export default function useUA() {
     }
   }
 
-  const attendedTransfer = async () => {
+  const attendedTransfer = async (from: SessionName, to: SessionName) => {
     if (!bonTalk) return
     try {
-      await bonTalk.attendedTransfer("outgoing", "attendedRefer")
+      await bonTalk.attendedTransfer(from, to)
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to attended transfer - transfer`)
       console.error(error)

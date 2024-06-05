@@ -1,73 +1,58 @@
-import { useEffect, useState, useSyncExternalStore } from "react"
+import { useState, useSyncExternalStore } from "react"
 import styled from "@emotion/styled"
 import ViewContainer from "@/components/ViewContainer"
 import ActionPad, { type ActionButtonType } from "@/components/ActionPad"
 import Menu from "@/components/Menu"
-import useTimer from "@/hooks/useTimer"
 import { SessionName } from "@/entry/plugin"
 import { useBonTalk } from "@/Provider/BonTalkProvider"
-import KeyPad from "../KeyPad"
 import NumberPad from "@/components/NumberPad"
 import Header from "@/components/Header"
 import useInputKeys from "@/hooks/useInputKeys"
-import { Inviter } from "sip.js"
 
 type CallingProps = {
   currentSessionName: SessionName | ""
+
   callTarget: string
+  prevTarget: string | ""
+
   onHangClick: () => void
   onHoldClick: () => void
   onMuteClick: () => void
   // onKeyPadClick: () => void
   onForwardClick: (number: string) => void
-}
-
-let listeners: ((...argus: unknown[]) => unknown)[] = []
-function subscribe(listener: (...argus: unknown[]) => unknown) {
-  listeners = [...listeners, listener]
-  return () => listeners.filter((l) => l !== listener)
+  onPreForwardSendCall: (number: string) => void
 }
 
 export default function Calling(props: CallingProps) {
   const bonTalk = useBonTalk()!
 
-  const isMuted = useSyncExternalStore(subscribe, () => bonTalk.sessionManager.getSession(props.currentSessionName).isMuted)
-  const isHold = useSyncExternalStore(subscribe, () => bonTalk.sessionManager.getSession(props.currentSessionName).isHold)
+  const currentSession = useSyncExternalStore(bonTalk.sessionManager.subscribe.bind(bonTalk.sessionManager), () =>
+    bonTalk.sessionManager.getSession(props.currentSessionName)
+  )
+
+  const prevSession = useSyncExternalStore(bonTalk.sessionManager.subscribe.bind(bonTalk.sessionManager), () =>
+    bonTalk.sessionManager.getSession(props.prevTarget)
+  )
+
+  const isHold = currentSession?.isHold || false
+  const isMuted = currentSession?.isMuted || false
+  const time = currentSession?.time || 0
 
   const [openKeyPad, setOpenKeyPad] = useState(false)
   const [actionPayType, setActionPadType] = useState<"CALLING" | "DTMF" | "FORWARD" | "PRE_FORWARD" | "DEFAULT">("DEFAULT")
   const { inputKeys, enterKey, deleteKey } = useInputKeys()
 
-  const { time, start, stop } = useTimer()
-  const { time: time2, start: start2, stop: stop2 } = useTimer()
   // seconds to hh:mm:ss
-  const formattedTime = new Date(time * 1000).toISOString().slice(11, 19)
-  const formattedTime2 = new Date(time2 * 1000).toISOString().slice(11, 19)
-
-  const [preForwarder, setPreForwarder] = useState<Inviter | null>(null)
-
-  useEffect(() => {
-    start()
-  }, [])
+  const currentSessionTime = new Date(time * 1000).toISOString().slice(11, 19)
+  const prevSessionTime = new Date((prevSession?.time || 0) * 1000).toISOString().slice(11, 19)
 
   const handleActionPress = (action: ActionButtonType) => {
     switch (action) {
       case "HANG":
-        if (preForwarder) {
-          handlePreForwardHangup()
-          stop2()
-          return
-        }
+        setOpenKeyPad(false)
         props.onHangClick()
-        stop()
         break
       case "FORWARD":
-        if (preForwarder) {
-          if (!props.currentSessionName) return
-          bonTalk.attendedTransfer(props.currentSessionName, "attendedRefer")
-          return
-        }
-
         props.onForwardClick(inputKeys)
         break
       case "PRE_FORWARD":
@@ -119,27 +104,19 @@ export default function Calling(props: CallingProps) {
   }
 
   const handlePreForwardSendCall = async () => {
-    if (!props.currentSessionName) return
-    console.log("pre forward send call")
-    const inviter = await bonTalk.preAttendedTransfer(props.currentSessionName, inputKeys)
-    setPreForwarder(inviter)
+    props.onPreForwardSendCall(inputKeys)
     setOpenKeyPad(false)
-    start2()
   }
 
-  const handlePreForwardHangup = async () => {
-    if (!preForwarder) return
-    await bonTalk.hangupCall("attendedRefer")
-    setPreForwarder(null)
-    stop2()
-  }
+  console.log("keypad", openKeyPad)
+  console.log("prevTarget", props.prevTarget)
 
   return (
     <>
       <Header
-        showInformation={Boolean(openKeyPad || preForwarder)}
-        informationTitle={props.callTarget}
-        time={formattedTime}
+        showInformation={Boolean(openKeyPad || props.prevTarget)}
+        informationTitle={props.prevTarget ? prevSession?.name : props.callTarget}
+        time={props.prevTarget ? prevSessionTime : currentSessionTime}
         showCancelButton={openKeyPad}
         onCancelClick={handleCancelClick}
       />
@@ -147,9 +124,9 @@ export default function Calling(props: CallingProps) {
         {/* 通話畫面 */}
         {!openKeyPad ? (
           <>
-            <CallingTargetTitle>{preForwarder ? inputKeys : props.callTarget}</CallingTargetTitle>
+            <CallingTargetTitle>{props.callTarget}</CallingTargetTitle>
             <div style={{ height: "24px" }} />
-            <Timer>{preForwarder ? formattedTime2 : formattedTime}</Timer>
+            <Timer>{currentSessionTime}</Timer>
             <div style={{ flex: 1 }} />
             <Menu
               isMuted={isMuted}
@@ -159,10 +136,13 @@ export default function Calling(props: CallingProps) {
               onKeyPadClick={handleKeyPadClick}
               onSwitchClick={handleSwitchClick}
               onPreForwardClick={handlePreForwardClick}
-              disabledTransfer={Boolean(preForwarder)}
+              disabledTransfer={props.currentSessionName === "attendedRefer"}
             />
             <div style={{ flex: 1 }} />
-            <ActionPad actionType={preForwarder ? "READY_FORWARD" : "CALLING"} onButtonClick={handleActionPress} />
+            <ActionPad
+              actionType={props.currentSessionName === "attendedRefer" ? "READY_FORWARD" : "CALLING"}
+              onButtonClick={handleActionPress}
+            />
           </>
         ) : null}
         {/* keypad usage / DTMF ? */}

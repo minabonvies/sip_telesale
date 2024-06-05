@@ -217,6 +217,7 @@ export default class BonTalk {
 
     const targetURI = BonTalk.makeURI(this.urlTemplate(target))
     const inviter = new Inviter(this.userAgent, targetURI)
+    this.sessionManager.addSession(as, inviter)
     inviter.stateChange.addListener((state: SessionState) => {
       switch (state) {
         case SessionState.Initial:
@@ -224,7 +225,6 @@ export default class BonTalk {
         case SessionState.Establishing:
           break
         case SessionState.Established:
-          this.sessionManager.addSession(as, inviter)
           BonTalk.setupRemoteMedia(inviter, audioElement as HTMLMediaElement)
           break
         case SessionState.Terminating:
@@ -269,7 +269,11 @@ export default class BonTalk {
   }
 
   async hangupCall(sessionName: SessionName) {
-    const { session: currentSession } = this.sessionManager.getSession(sessionName)
+    const customSession = this.sessionManager.getSession(sessionName)
+    const currentSession = customSession?.session
+    if (!currentSession) {
+      return
+    }
     switch (currentSession.state) {
       case SessionState.Initial:
       case SessionState.Establishing:
@@ -294,7 +298,11 @@ export default class BonTalk {
 
   async setHold(hold: boolean, sessionName: SessionName) {
     console.log(`[setHold] to switch hold to ${hold}, sessionName: ${sessionName}`)
-    const { session: currentSession } = this.sessionManager.getSession(sessionName)
+    const customSession = this.sessionManager.getSession(sessionName)
+    const currentSession = customSession?.session
+    if (!currentSession) {
+      return
+    }
 
     if (currentSession.state === SessionState.Established) {
       const options: SessionInviteOptions = {
@@ -302,6 +310,7 @@ export default class BonTalk {
           onReject: () => {},
         },
         sessionDescriptionHandlerOptions: {
+          // @ts-expect-error missing type
           hold,
         },
       }
@@ -320,7 +329,11 @@ export default class BonTalk {
    * @param mute - Mute on if true, off if false.
    */
   toggleMicrophone(mute: boolean, sessionName: SessionName) {
-    const { session: currentSession } = this.sessionManager.getSession(sessionName)
+    const customSession = this.sessionManager.getSession(sessionName)
+    const currentSession = customSession?.session
+    if (!currentSession) {
+      return
+    }
     // @ts-expect-error sip.js types are not up to date
     currentSession.sessionDescriptionHandler!.peerConnection.getLocalStreams().forEach(function (stream) {
       // @ts-expect-error sip.js types are not up to date
@@ -338,8 +351,8 @@ export default class BonTalk {
   }
 
   async sendDTMF(tone: string, sessionName: SessionName) {
-    const { session: currentSession } = this.sessionManager.getSession(sessionName)
-    if (!currentSession) {
+    const currentSession = this.sessionManager.getSession(sessionName)
+    if (!currentSession?.session) {
       throw new BonTalkError("[bonTalk] session not initialized")
     }
     const sessionInfoOptions = {
@@ -351,7 +364,7 @@ export default class BonTalk {
         },
       },
     }
-    await currentSession.info(sessionInfoOptions)
+    await currentSession.session.info(sessionInfoOptions)
   }
 
   async blindTransfer(from: SessionName, target: string) {
@@ -359,8 +372,8 @@ export default class BonTalk {
     if (!newTarget) {
       throw new BonTalkError("[bonTalk] new target is not defined")
     }
-    const { session: currentSession } = this.sessionManager.getSession(from)
-
+    const customSession = this.sessionManager.getSession(from)
+    const currentSession = customSession?.session
     if (!currentSession) {
       throw new BonTalkError("[bonTalk] session not initialized")
     }
@@ -375,12 +388,14 @@ export default class BonTalk {
   }
 
   async attendedTransfer(from: SessionName, target: SessionName) {
-    const { session: firstSession } = this.sessionManager.getSession(from)
+    const customSession = this.sessionManager.getSession(from)
+    const firstSession = customSession?.session
     if (!firstSession) {
       throw new BonTalkError("[bonTalk] first session not initialized")
     }
 
-    const { session: secondSession } = this.sessionManager.getSession(target)
+    const customSession2 = this.sessionManager.getSession(target)
+    const secondSession = customSession2?.session
     if (!secondSession) {
       throw new BonTalkError("[bonTalk] second session not initialized")
     }
@@ -484,18 +499,72 @@ type SessionMap = {
   outgoing: Inviter
   attendedRefer: Inviter
 }
+
+class CustomSession {
+  _id = Math.random().toString(36).substr(2, 9)
+  session: Inviter | Invitation | null = null
+  isMuted: boolean = false
+  isHold: boolean = false
+  time: number = 0
+  timerId: number | null = null
+
+  get name() {
+    if (!this.session) {
+      return "No Session"
+    }
+
+    if (this.session instanceof Inviter) {
+      return this.session.request.to.uri.user
+    }
+
+    if (this.session instanceof Invitation) {
+      return this.session.request.from.displayName
+    }
+
+    return "Unknown"
+  }
+
+  constructor({
+    session,
+    isMuted,
+    isHold,
+    time,
+    timerId,
+  }: {
+    session: Inviter | Invitation
+    isMuted: boolean
+    isHold: boolean
+    time: number
+    timerId: number | null
+  }) {
+    this.session = session
+    this.isMuted = isMuted
+    this.isHold = isHold
+    this.time = time
+    this.timerId = timerId
+  }
+
+  copy() {
+    return new CustomSession({
+      session: this.session!,
+      isMuted: this.isMuted,
+      isHold: this.isHold,
+      time: this.time,
+      timerId: this.timerId,
+    })
+  }
+}
 class SessionManager {
   /**
    * {
    *  incoming: invitation
    *  outgoing: inviter
    *  attendedRefer: inviter
-   *  musicOnHold: 未知
    * }
    */
-  private sessions: Map<SessionName, Inviter | Invitation | unknown> = new Map()
-  private mute: Map<SessionName, boolean> = new Map()
-  private hold: Map<SessionName, boolean> = new Map()
+  private sessions: Map<SessionName, CustomSession> = new Map()
+
+  listeners: ((...argus: unknown[]) => unknown)[] = []
 
   constructor() {}
 
@@ -504,46 +573,94 @@ class SessionManager {
   }
 
   addSession<T extends SessionName>(type: T, session: SessionMap[T]) {
-    this.sessions.set(type, session)
-    this.mute.set(type, false)
-    this.hold.set(type, false)
+    const newSession = new CustomSession({ session, isMuted: false, isHold: false, time: 0, timerId: null })
+    this.sessions.set(type, newSession)
+    this.emitChange()
+
+    newSession.timerId = window.setInterval(() => {
+      try {
+        const prevSession = this.sessions.get(type)!
+        prevSession.time += 1
+        const copiedSession = prevSession.copy()
+        this.sessions.set(type, copiedSession)
+        this.emitChange()
+      } catch {
+        console.log("clearInterval")
+        window.clearInterval(newSession.timerId!)
+      }
+    }, 1000)
   }
 
-  getSession<T extends SessionName>(type: T) {
-    return {
-      isMuted: this.mute.get(type) ?? false,
-      isHold: this.hold.get(type) ?? false,
-      session: this.sessions.get(type) as SessionMap[T],
+  getSession<T extends SessionName | "">(type: T) {
+    if (!type) {
+      return null
     }
+
+    return this.sessions.get(type)
   }
 
   removeSession<T extends SessionName>(type: T) {
+    const session = this.sessions.get(type)
+    if (session) {
+      window.clearInterval(session.timerId!)
+    }
     this.sessions.delete(type)
-    this.mute.delete(type)
-    this.hold.delete(type)
   }
 
   muteSession<T extends SessionName>(type: T) {
-    this.mute.set(type, true)
+    const session = this.sessions.get(type)
+    if (session) {
+      session.isMuted = true
+    }
   }
 
   unmuteSession<T extends SessionName>(type: T) {
-    this.mute.set(type, false)
+    const session = this.sessions.get(type)
+    if (session) {
+      session.isMuted = false
+    }
   }
 
   isSessionMuted<T extends SessionName>(type: T) {
-    return this.mute.get(type) ?? false
+    const session = this.sessions.get(type)
+    return session ? session.isMuted : false
   }
 
   holdSession<T extends SessionName>(type: T) {
-    this.hold.set(type, true)
+    const session = this.sessions.get(type)
+    if (session) {
+      session.isHold = true
+      const newSession = session.copy()
+      this.sessions.set(type, newSession)
+      this.emitChange()
+    }
   }
 
   unHoldSession<T extends SessionName>(type: T) {
-    this.hold.set(type, false)
+    const session = this.sessions.get(type)
+    if (session) {
+      session.isHold = false
+      const newSession = session.copy()
+      this.sessions.set(type, newSession)
+      this.emitChange()
+    }
   }
 
   isSessionHold<T extends SessionName>(type: T) {
-    return this.hold.get(type) ?? false
+    const session = this.sessions.get(type)
+    return session ? session.isHold : false
+  }
+
+  subscribe(listener: (...argus: unknown[]) => unknown) {
+    this.listeners = [...this.listeners, listener]
+    return () => {
+      this.listeners = this.listeners.filter((l) => l !== listener)
+    }
+  }
+
+  emitChange() {
+    this.listeners.forEach((listener) => {
+      listener()
+    })
   }
 }
