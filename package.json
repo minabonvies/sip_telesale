@@ -1,8 +1,11 @@
 {
-  "name": "sip_telesale",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@bonvies/bontalk",
+  "author": "Bonvies <info@bonvies.com>",
+  "version": "0.0.1",
   "type": "module",
+  "main": "dist/bonTalk.cjs.js",
+  "module": "dist/bonTalk.umd.js",
+  "types": "dist/bonTalk.d.ts",
   "scripts": {
     "dev": "vite --mode development",
     "dev:plugin": "vite --mode development-plugin",
@@ -23,6 +26,7 @@
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.5",
+    "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
     "@rollup/plugin-url": "^8.0.2",
     "@types/jest": "^29.5.12",
@@ -44,7 +48,9 @@
     "tslib": "^2.6.2",
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
-    "vite-tsconfig-paths": "^4.3.2"
+    "vite-tsconfig-paths": "^4.3.2",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4"
   },
   "engines": {
     "node": ">=18.17.0"

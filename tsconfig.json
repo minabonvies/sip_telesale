@@ -15,6 +15,14 @@
     "jsx": "react-jsx",
     "esModuleInterop": true,
 
+    // dts setup
+    // "declaration": true,
+    // // This compiler run should
+    // // only output d.ts files
+    // "emitDeclarationOnly": true,
+    // "outDir": "./dist",
+    // "declarationMap": true,
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
