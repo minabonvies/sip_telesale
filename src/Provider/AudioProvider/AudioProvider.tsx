@@ -68,9 +68,9 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
         toggleDTMF,
       }}
     >
-      <audio controls={isDEV} id={bonTalk!.audioElementId} />
-      <audio loop controls={isDEV} ref={ringToneRef} src={ringtone} />
-      <audio controls={isDEV} ref={dtmfRef} src={dtmf} />
+      <audio id={bonTalk!.audioElementId} />
+      <audio loop ref={ringToneRef} src={ringtone} />
+      <audio ref={dtmfRef} src={dtmf} />
       {children}
     </AudioContext.Provider>
   )

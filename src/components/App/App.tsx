@@ -108,39 +108,32 @@ export default function App() {
   }
 
   return (
-    <>
-      <button onClick={() => console.log(bonTalk.sessionManager.getSession(currentCallingTarget))}>123</button>
-      <AppContainer>
-        <Content>
-          {view === "KEY_PAD" ? <KeyPad onCall={handleCall} /> : null}
-          {view === "RECEIVED_CALL" ? (
-            // TODO                      VVVVV
-            <IncomingCall displayTitle={"TEST"} onAccept={handleAccept} onReject={handleReject} />
-          ) : null}
-          {view === "IN_CALL" ? (
-            <Calling
-              key={currentCallingTarget}
-              currentSessionName={currentCallingTarget}
-              callTarget={callTargetTitle}
-              prevTarget={tempCurrentCallingTarget}
-              onHangClick={handleHangClick}
-              onHoldClick={handleHoldClick}
-              onMuteClick={handleMuteClick}
-              onForwardClick={handleForwardClick}
-              onPreForwardSendCall={handlePreForwardSendCall}
-              onDTMFClick={handleDTMFClick}
-            />
-          ) : null}
-          <ContentFooter>
-            <Logo />
-          </ContentFooter>
-        </Content>
-      </AppContainer>
-
-      <button onClick={() => setView("KEY_PAD")}>KEYPAD</button>
-      <button onClick={() => setView("RECEIVED_CALL")}>RECEIVED_CALL</button>
-      <button onClick={() => setView("IN_CALL")}>IN_CALL</button>
-    </>
+    <AppContainer>
+      <Content>
+        {view === "KEY_PAD" ? <KeyPad onCall={handleCall} /> : null}
+        {view === "RECEIVED_CALL" ? (
+          // TODO                      VVVVV
+          <IncomingCall displayTitle={"TEST"} onAccept={handleAccept} onReject={handleReject} />
+        ) : null}
+        {view === "IN_CALL" ? (
+          <Calling
+            key={currentCallingTarget}
+            currentSessionName={currentCallingTarget}
+            callTarget={callTargetTitle}
+            prevTarget={tempCurrentCallingTarget}
+            onHangClick={handleHangClick}
+            onHoldClick={handleHoldClick}
+            onMuteClick={handleMuteClick}
+            onForwardClick={handleForwardClick}
+            onPreForwardSendCall={handlePreForwardSendCall}
+            onDTMFClick={handleDTMFClick}
+          />
+        ) : null}
+        <ContentFooter>
+          <Logo />
+        </ContentFooter>
+      </Content>
+    </AppContainer>
   )
 }
 
