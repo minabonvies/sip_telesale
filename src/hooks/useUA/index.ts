@@ -60,8 +60,10 @@ export default function useUA() {
     if (!bonTalk) return
     if (!target) return
 
+    const extraHeaders = ["X-Ticket-Id: taiwan bonvies ticket system"]
+
     try {
-      await bonTalk.audioCall(target, "outgoing")
+      await bonTalk.audioCall(target, "outgoing", extraHeaders)
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to place call`)
       console.error(error)

@@ -15,6 +15,7 @@ import {
   SessionInviteOptions,
   InviterOptions,
   SessionInfoOptions,
+  Subscriber,
 } from "sip.js"
 import BonTalkError from "@/utils/BonTalkError"
 import ThemeProvider from "@/Provider/ThemeProvider"
@@ -182,7 +183,7 @@ export default class BonTalk {
     await this.registerer.unregister()
   }
 
-  async audioCall(target: string, as: SessionName) {
+  async audioCall(target: string, as: SessionName, extraHeaders: Array<string>) {
     if (!this.userAgent) {
       throw new BonTalkError("[bonTalk] userAgent not initialized")
     }
@@ -192,9 +193,9 @@ export default class BonTalk {
       throw new BonTalkError(`[bonTalk] audioElement with id ${this._audioElementId} not found`)
     }
 
-    // send ticket ids
+    // send ticket id
     const inviterOptions: InviterOptions = {
-      extraHeaders: ["X-Ticket-Id:taiwan bonvies ticket system"]
+      extraHeaders
     }
 
     const targetURI = BonTalk.makeURI(this.urlTemplate(target))
