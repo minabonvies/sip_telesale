@@ -21,6 +21,8 @@ type CallingProps = {
   // onKeyPadClick: () => void
   onForwardClick: (number: string) => void
   onPreForwardSendCall: (number: string) => void
+
+  onDTMFClick: (key: string) => void
 }
 
 export default function Calling(props: CallingProps) {
@@ -39,7 +41,7 @@ export default function Calling(props: CallingProps) {
   const time = currentSession?.time || 0
 
   const [openKeyPad, setOpenKeyPad] = useState(false)
-  const [actionPayType, setActionPadType] = useState<"CALLING" | "DTMF" | "FORWARD" | "PRE_FORWARD" | "DEFAULT">("DEFAULT")
+  const [actionPadType, setActionPadType] = useState<"CALLING" | "DTMF" | "FORWARD" | "PRE_FORWARD" | "DEFAULT">("DEFAULT")
   const { inputKeys, enterKey, deleteKey } = useInputKeys()
 
   // seconds to hh:mm:ss
@@ -77,6 +79,7 @@ export default function Calling(props: CallingProps) {
     props.onHoldClick()
   }
 
+  // this toggle keypad view
   const handleKeyPadClick = () => {
     setOpenKeyPad((p) => !p)
     setActionPadType("DTMF")
@@ -84,6 +87,10 @@ export default function Calling(props: CallingProps) {
   }
 
   const handleKeyPress = (key: string) => {
+    if (actionPadType) {
+      props.onDTMFClick(key)
+    }
+
     enterKey(key)
   }
 
@@ -150,9 +157,9 @@ export default function Calling(props: CallingProps) {
           <>
             <CallingTargetTitle>{inputKeys}</CallingTargetTitle>
             <div style={{ height: "34px" }} />
-            <NumberPad dtmf={actionPayType === "DTMF"} onKeyPress={handleKeyPress} />
+            <NumberPad dtmf={actionPadType === "DTMF"} onKeyPress={handleKeyPress} />
             <div style={{ height: "32px" }} />
-            <ActionPad actionType={actionPayType} onButtonClick={handleActionPress} />
+            <ActionPad actionType={actionPadType} onButtonClick={handleActionPress} />
           </>
         ) : null}
       </ViewContainer>

@@ -13,7 +13,18 @@ import { SessionName } from "@/entry/plugin"
 export default function App() {
   const bonTalk = useBonTalk()!
   const { view, setView, currentCallingTarget, setCurrentCallingTarget } = useView()
-  const { audioCall, hangupCall, answerCall, rejectCall, setMute, setHold, blindTransfer, preAttendedTransfer, attendedTransfer } = useUA()
+  const {
+    audioCall,
+    hangupCall,
+    answerCall,
+    rejectCall,
+    setMute,
+    setHold,
+    blindTransfer,
+    preAttendedTransfer,
+    attendedTransfer,
+    sendDTMF,
+  } = useUA()
   const [tempCurrentCallingTarget, setTempCurrentCallingTarget] = useState<SessionName | "">("")
 
   // TODO: need state?
@@ -91,6 +102,11 @@ export default function App() {
     })
   }
 
+  const handleDTMFClick = async (key: string) => {
+    if (!currentCallingTarget) return
+    await sendDTMF(key, currentCallingTarget)
+  }
+
   return (
     <>
       <button onClick={() => console.log(bonTalk.sessionManager.getSession(currentCallingTarget))}>123</button>
@@ -112,6 +128,7 @@ export default function App() {
               onMuteClick={handleMuteClick}
               onForwardClick={handleForwardClick}
               onPreForwardSendCall={handlePreForwardSendCall}
+              onDTMFClick={handleDTMFClick}
             />
           ) : null}
           <ContentFooter>

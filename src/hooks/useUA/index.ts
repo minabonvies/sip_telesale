@@ -119,10 +119,10 @@ export default function useUA() {
     bonTalk.toggleMicrophone(mute, target)
   }
 
-  const sendDTMF = async (tone: string) => {
+  const sendDTMF = async (tone: string, to: SessionName) => {
     if (!bonTalk) return
     try {
-      await bonTalk.sendDTMF(tone, "outgoing")
+      await bonTalk.sendDTMF(tone, to)
       toggleDTMF()
     } catch (error) {
       console.error(`[${bonTalk.userAgentInstance?.instanceId}] failed to send DTMF`)
