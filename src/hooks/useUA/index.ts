@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Invitation, SessionState, Referral } from "sip.js"
+import { Invitation, SessionState, Referral,Notification } from "sip.js"
 import { useBonTalk } from "@/Provider/BonTalkProvider"
 import BonTalk from "@/entry/plugin"
 
@@ -15,7 +15,6 @@ export default function useUA() {
   const invitationRef = useRef<Invitation | null>(null)
   const [invitation, setInvitation] = useState<Invitation | null>(null)
 
-  const [referral, setReferral] = useState<Referral | null>(null)
 
   const [c, setC] = useState("0")
 
@@ -52,40 +51,12 @@ export default function useUA() {
           }
         })
       })
-
-      bonTalk?.addDelegate("onRefer", async (referral) => {
-        // if (acceptReferral()) {
-        //   await referral.accept()
-        //   const inviter =  referral.makeInviter()
-        //   await inviter.invite()
-        //   inviter.stateChange.addListener((state: SessionState) => {
-        //     switch (state) {
-        //       case SessionState.Initial:
-        //         break
-        //       case SessionState.Establishing:
-        //         break
-        //       case SessionState.Established:
-        //         // BonTalk.setupRemoteMedia(inviter, audioElement as HTMLMediaElement)
-        //         break
-        //       case SessionState.Terminating:
-        //       case SessionState.Terminated:
-        //         // BonTalk.cleanupMedia(audioElement as HTMLMediaElement)
-        //         break
-        //       default:
-        //         throw new Error("Unknown session state.")
-        //     }
-        //   })
-        // } else {
-        //   referral.reject()
-        // }
-      })
     }
 
     // TODO: React.strictMode warning
     _login()
   }, [])
 
-  const acceptReferral = () => {}
 
   const audioCall = async (target: string) => {
     if (!bonTalk) return
@@ -229,6 +200,11 @@ export default function useUA() {
     }
   }
 
+  const subscribe = async () => {
+    if(!bonTalk)return
+    await bonTalk.subscribe()
+  }
+
   return {
     audioRef,
     ringToneRef,
@@ -245,5 +221,6 @@ export default function useUA() {
     preAttendedTransfer,
     attendedTransfer,
     c,
+    subscribe
   }
 }

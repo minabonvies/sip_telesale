@@ -7,7 +7,7 @@ import { useBonTalk } from "./Provider/BonTalkProvider"
 
 export default function Playground() {
   const bonTalk = useBonTalk()
-  const { audioRef, ringToneRef, dtmfRef, audioCall, answerCall, rejectCall, hangupCall, setHold, invitationRef, sendDTMF, setMute, blindTransfer, attendedTransfer, preAttendedTransfer } = useUA()
+  const { audioRef, ringToneRef, dtmfRef, audioCall, answerCall, rejectCall, hangupCall, setHold, invitationRef, sendDTMF, setMute, blindTransfer, attendedTransfer, preAttendedTransfer,subscribe } = useUA()
 
   const [isHold, setIsHold] = useState(false)
   const [isMute, setIsMute] = useState(false)
@@ -68,6 +68,10 @@ export default function Playground() {
     attendedTransfer()
   }
 
+  const handleSubscribe = () => {
+    subscribe()
+  }
+
   return (
     <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", padding: "24px" }}>
       <audio id={bonTalk!.audioElementId} ref={audioRef}></audio>
@@ -95,6 +99,7 @@ export default function Playground() {
       <button onClick={handleDTMF("0")}>0</button>
       <button onClick={handleDTMF("*")}>*</button>
       <button onClick={handleDTMF("#")}>#</button>
+      <button onClick={handleSubscribe}>Subscribe</button>
     </div>
   )
 }

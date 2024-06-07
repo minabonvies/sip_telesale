@@ -13,6 +13,7 @@ import {
   UserAgent,
   UserAgentDelegate,
   SessionInviteOptions,
+  Subscriber
 } from "sip.js"
 import BonTalkError from "@/utils/BonTalkError"
 import ThemeProvider from "@/Provider/ThemeProvider"
@@ -141,6 +142,22 @@ export default class BonTalk {
     }
     return element as HTMLMediaElement
   }
+
+  async subscribe() {
+    const target = UserAgent.makeURI(this.urlTemplate("3001"))
+
+    const subscriber = new Subscriber(this.userAgent!, target!, "presence")
+    await subscriber.subscribe()
+    subscriber.delegate = {
+      onNotify: (notification) => {
+        console.log(notification.request.data);
+        
+      }
+    }
+    
+  }
+
+
 
   async login() {
     if (!this.userAgent) {
@@ -299,7 +316,7 @@ export default class BonTalk {
               RTCRtpSender.track.enabled = !hold
             })
           },
-          onReject: () => {},
+          onReject: () => { },
         },
       }
       await currentSession.invite(options)
@@ -475,7 +492,7 @@ class SessionManager {
    */
   private sessions: Map<SessionName, Inviter | Invitation | unknown> = new Map()
 
-  constructor() {}
+  constructor() { }
 
   getSessions() {
     return this.sessions
