@@ -2,7 +2,7 @@ import App from "@/components/App"
 import ReactDOM from "react-dom/client"
 import BonTalkProvider from "@/Provider/BonTalkProvider"
 import "./normalize.css"
-import "./index.css"
+import "./plugin.css"
 import {
   Invitation,
   InvitationAcceptOptions,
@@ -411,15 +411,16 @@ export default class BonTalk {
    */
   init() {
     if (this.reactRoot) {
-      throw new BonTalkError("[bonTalk] already rendered")
+      console.warn("[bonTalk] init() was called, to prevent unexpected behavior the process will return here.")
+      return
     }
 
     const body = document.body
-    const buttonElement = document.getElementById(this.buttonElementId)
+    // const buttonElement = document.getElementById(this.buttonElementId)
 
-    if (!buttonElement) {
-      throw new BonTalkError(`[bonTalk] buttonElement with id ${this.buttonElementId} not found`)
-    }
+    // if (!buttonElement) {
+    //   throw new BonTalkError(`[bonTalk] buttonElement with id ${this.buttonElementId} not found`)
+    // }
 
     const root = document.createElement("div")
     root.id = this.rootId
@@ -431,7 +432,7 @@ export default class BonTalk {
 
     // attach open event to button
     // this.buttonElement = buttonElement
-    buttonElement.addEventListener("click", this.togglePanel.bind(this))
+    // buttonElement.addEventListener("click", this.togglePanel.bind(this))
 
     this.reactRoot = ReactDOM.createRoot(root)
     this.reactRoot.render(

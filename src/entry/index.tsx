@@ -1,24 +1,11 @@
-import React from "react"
 import ReactDOM from "react-dom/client"
-import Playground from "@/Playground"
+import Playground from "@/components/Playground"
 import "./normalize.css"
 import "./index.css"
-import BonTalkProvider from "@/Provider/BonTalkProvider"
-import BonTalk from "./plugin"
-
-const bonTalk = new BonTalk({
-  buttonElementId: "", // for dev, no need to render button
-  wsServer: "wss://demo.sip.telesale.org:7443/ws",
-  domains: ["demo.sip.telesale.org"],
-  username: "3003",
-  password: "42633506",
-  displayName: "3003 Charlie",
-})
+import React from "react"
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BonTalkProvider value={bonTalk}>
-      <Playground />
-    </BonTalkProvider>
+    <Playground />
   </React.StrictMode>
 )
