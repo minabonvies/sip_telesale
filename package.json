@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite --mode development",
     "dev:plugin": "vite --mode development-plugin",
-    "build": "tsc && vite build",
+    "build": "tsc --noEmitOnError false && vite build",
     "build:plugin": "rollup --config --environment INCLUDE_DEPS,BUILD:production",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
