@@ -9,7 +9,7 @@ export default ({ mode }) => {
 
   return defineConfig({
     plugins: [react(), tsconfigPaths()],
-
+    base: "/sip_telesale/",
     // server: {
     //   open: process.env.VITE_OPEN,
     // },
