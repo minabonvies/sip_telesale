@@ -32,7 +32,6 @@ import BonTalk from "BonTalk"
 
 // create an usable sip phone instance
 const bonTalk = new BonTalk({
-  buttonElementId: "bon-sip-button",
   wsServer: "wss://bon.example.org:7443/ws",
   domains: ["bon.example.org", "bon.example2.org"],
   username: "3003",
@@ -41,24 +40,29 @@ const bonTalk = new BonTalk({
 })
 
 bonTalk.init()
+
+// attach a event to a button
+document.getElementById("toggleButton").addEventListener("click", () => {
+  bonTalk.togglePanel()
+})
 ```
 
 Unregister and destroy the instance…
 
 ```jsx
 bonTalk.destroy()
+// and remove the dom node...
 ```
 
 ### Arguments
 
-| Argument        | Data Type | Description                                                                |
-| --------------- | --------- | -------------------------------------------------------------------------- |
-| buttonElementId | string    | a toggle id for opening or closing the BonTalk panel                       |
-| wsServer        | string    | an usable web socket server address                                        |
-| domains         | string[ ] | place multiple PBX domains or IPs to prevent any PBX from working properly |
-| username        | string    | authorization username of the extension                                    |
-| password        | string    | authorization password of the extension                                    |
-| displayName     | string    | display name of the extension                                              |
+| Argument    | Data Type | Description                                                                |
+| ----------- | --------- | -------------------------------------------------------------------------- |
+| wsServer    | string    | an usable web socket server address                                        |
+| domains     | string[ ] | place multiple PBX domains or IPs to prevent any PBX from working properly |
+| username    | string    | authorization username of the extension                                    |
+| password    | string    | authorization password of the extension                                    |
+| displayName | string    | display name of the extension                                              |
 
 ## Instance Methods
 

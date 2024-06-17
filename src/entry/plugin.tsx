@@ -21,8 +21,6 @@ import ViewProvider from "@/Provider/ViewProvider"
 import AudioProvider from "@/Provider/AudioProvider"
 
 export default class BonTalk {
-  private buttonElementId: string
-  // private buttonElement: HTMLElement | null = null
   private rootElement: HTMLElement | null = null
   private reactRoot: ReactDOM.Root | null = null
 
@@ -81,7 +79,6 @@ export default class BonTalk {
   }
 
   constructor({
-    buttonElementId,
     wsServer,
     domains,
     username,
@@ -89,7 +86,6 @@ export default class BonTalk {
     displayName,
     themeColor,
   }: {
-    buttonElementId: string
     wsServer: string
     domains: string[]
     username: string
@@ -97,8 +93,6 @@ export default class BonTalk {
     displayName: string
     themeColor?: string
   }) {
-    this.buttonElementId = buttonElementId
-
     this.wsServer = wsServer
 
     if (domains.length === 0) {
@@ -416,11 +410,6 @@ export default class BonTalk {
     }
 
     const body = document.body
-    // const buttonElement = document.getElementById(this.buttonElementId)
-
-    // if (!buttonElement) {
-    //   throw new BonTalkError(`[bonTalk] buttonElement with id ${this.buttonElementId} not found`)
-    // }
 
     const root = document.createElement("div")
     root.id = this.rootId
@@ -429,10 +418,6 @@ export default class BonTalk {
     this.rootElement.style.top = "0"
     this.rootElement.style.right = "0"
     body.appendChild(root)
-
-    // attach open event to button
-    // this.buttonElement = buttonElement
-    // buttonElement.addEventListener("click", this.togglePanel.bind(this))
 
     this.reactRoot = ReactDOM.createRoot(root)
     this.reactRoot.render(
