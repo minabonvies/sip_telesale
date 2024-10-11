@@ -1,3 +1,4 @@
+import { useCallback, useEffect } from "react"
 import { useAudio } from "@/Provider/AudioProvider"
 import KeyPadButton from "../KeyPadButton"
 import KeyPadContainer from "../KeyPadContainer"
@@ -56,17 +57,34 @@ const KEYS = [
     text: "#",
     subText: "",
   },
-]
+];
 
 export default function NumberPad(props: Props) {
   const { toggleDTMF } = useAudio()
 
-  const handleKeyPress = (key: string) => {
+  const handleKeyPress = useCallback((key: string) => {
+    console.log(key);
     props.onKeyPress(key)
     if (props.dtmf) {
       toggleDTMF()
     }
-  }
+  },[props, toggleDTMF])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      console.log(e.key);
+      if (/^[0-9*#]$/.test(e.key)) {
+        handleKeyPress(e.key);
+      }
+      return
+    };
+  
+    window.addEventListener("keydown", handleKeyDown);
+  
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleKeyPress]);
 
   return (
     <KeyPadContainer>

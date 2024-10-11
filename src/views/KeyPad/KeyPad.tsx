@@ -4,7 +4,7 @@ import useInputKeys from "@/hooks/useInputKeys"
 import ViewContainer from "@/components/ViewContainer"
 import NumberPad from "@/components/NumberPad"
 import ActionPad, { type ActionButtonType } from "@/components/ActionPad"
-import ContentHeader from "@/components/ContentHeader"
+// import ContentHeader from "@/components/ContentHeader"
 import Header from "@/components/Header"
 
 type KeyPadProps = {
