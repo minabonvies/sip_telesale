@@ -413,6 +413,7 @@ export default class BonTalk {
 
     const root = document.createElement("div")
     root.id = this.rootId
+    root.dataset.isToggle = "true"
     this.rootElement = root
     this.rootElement.style.position = "fixed"
     this.rootElement.style.top = "0"
@@ -444,7 +445,8 @@ export default class BonTalk {
     if (!this.rootElement) {
       return
     }
-    this.rootElement.style.transform = this.rootElement.style.transform === "translateX(100%)" ? "translateX(0)" : "translateX(100%)"
+    this.rootElement.style.transform = this.rootElement.style.transform === "translateX(100%)" ? "translateX(0)" : "translateX(100%)";
+    this.rootElement?.getAttribute('data-is-toggle') === "true" ? this.rootElement?.setAttribute("data-is-toggle", "false") : this.rootElement?.setAttribute("data-is-toggle", "true")
   }
 
   /**

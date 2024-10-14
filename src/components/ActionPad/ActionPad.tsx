@@ -20,6 +20,7 @@ export default function ActionPad(props: Props) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      e.preventDefault();
       // 檢查 key 是否為 '0' 到 '9'、'*'、'#'
       switch (e.key) {
         case 'Backspace': {

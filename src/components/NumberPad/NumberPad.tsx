@@ -63,7 +63,6 @@ export default function NumberPad(props: Props) {
   const { toggleDTMF } = useAudio()
 
   const handleKeyPress = useCallback((key: string) => {
-    console.log(key);
     props.onKeyPress(key)
     if (props.dtmf) {
       toggleDTMF()
@@ -72,11 +71,14 @@ export default function NumberPad(props: Props) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      console.log(e.key);
-      if (/^[0-9*#]$/.test(e.key)) {
-        handleKeyPress(e.key);
-      }
-      return
+      e.preventDefault();
+      const bonTalkRoot = document.querySelector("#_bon_sip_phone_root");
+      const bonTalkIsToggle = bonTalkRoot?.getAttribute("data-is-toggle");
+       if(bonTalkIsToggle === "true") {
+        if (/^[0-9*#]$/.test(e.key)) {
+          handleKeyPress(e.key);
+        }
+       }
     };
   
     window.addEventListener("keydown", handleKeyDown);
