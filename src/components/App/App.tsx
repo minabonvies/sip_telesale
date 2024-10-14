@@ -108,7 +108,7 @@ export default function App() {
   }
 
   return (
-    <AppContainer>
+    <AppContainer tabIndex={0}>
       <Content>
         {view === "KEY_PAD" ? <KeyPad onCall={handleCall} /> : null}
         {view === "RECEIVED_CALL" ? <IncomingCall displayTitle={callTargetTitle} onAccept={handleAccept} onReject={handleReject} /> : null}
@@ -141,6 +141,7 @@ const AppContainer = styled.div((props) => ({
   flexDirection: "column",
   alignItems: "center",
   backgroundColor: props.theme.colors.background.default,
+  zIndex: "10000"
 }))
 
 const Content = styled.div({

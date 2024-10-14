@@ -89,10 +89,12 @@ export default function NumberPad(props: Props) {
   }, [handleKeyPress]);
 
   return (
-    <KeyPadContainer>
-      {KEYS.map((key) => (
-        <KeyPadButton key={key.text} text={key.text} subText={key.subText} onClick={() => handleKeyPress(key.text)} />
-      ))}
-    </KeyPadContainer>
+      <KeyPadContainer >
+        {KEYS.map((key) => (
+          <KeyPadButton key={key.text} text={key.text} subText={key.subText} onClick={() => handleKeyPress(key.text)} tabIndex={0} onKeyDown={()=>{
+            console.log("on keyDown test")
+          }} />
+        ))}
+      </KeyPadContainer>
   )
 }

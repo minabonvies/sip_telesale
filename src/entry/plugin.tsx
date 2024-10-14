@@ -413,11 +413,12 @@ export default class BonTalk {
 
     const root = document.createElement("div")
     root.id = this.rootId
-    root.dataset.isToggle = "true"
+    root.dataset.isToggle = "false"
     this.rootElement = root
     this.rootElement.style.position = "fixed"
     this.rootElement.style.top = "0"
     this.rootElement.style.right = "0"
+    this.rootElement.style.transform = "translateX(100%)"
     body.appendChild(root)
 
     this.reactRoot = ReactDOM.createRoot(root)
@@ -434,6 +435,11 @@ export default class BonTalk {
         </ThemeProvider>
       </ErrorBoundary>
     )
+    setTimeout(() => {
+      if (this.rootElement) {
+        this.togglePanel()
+      }
+    }, 0)
   }
 
   /**

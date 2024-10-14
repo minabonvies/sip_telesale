@@ -11,7 +11,7 @@ export default function KeyPadButton(props: Props) {
   const { text, subText, ...restProps } = props
 
   return (
-    <KeyPadButtonContainer {...restProps}>
+    <KeyPadButtonContainer {...restProps} >
       <div className="text">{text}</div>
       {subText ? <div className="subText">{subText}</div> : null}
     </KeyPadButtonContainer>
