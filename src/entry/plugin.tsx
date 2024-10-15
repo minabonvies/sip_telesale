@@ -301,7 +301,7 @@ export default class BonTalk {
     if (currentSession.state === SessionState.Established) {
       const options: SessionInviteOptions = {
         requestDelegate: {
-          onReject: () => {},
+          onReject: () => { },
         },
         sessionDescriptionHandlerOptions: {
           // @ts-expect-error missing type
@@ -451,7 +451,12 @@ export default class BonTalk {
     if (!this.rootElement) {
       return
     }
-    this.rootElement.style.transform = this.rootElement.style.transform === "translateX(100%)" ? "translateX(0)" : "translateX(100%)";
+    const isOpening = this.rootElement.style.transform === "translateX(100%)"
+    this.rootElement.style.transform = isOpening ? "translateX(0)" : "translateX(100%)";
+    if (isOpening) {
+      this.rootElement.focus()
+    }
+
     this.rootElement?.getAttribute('data-is-toggle') === "true" ? this.rootElement?.setAttribute("data-is-toggle", "false") : this.rootElement?.setAttribute("data-is-toggle", "true")
   }
 
@@ -560,7 +565,7 @@ class SessionManager {
 
   listeners: ((...argus: unknown[]) => unknown)[] = []
 
-  constructor() {}
+  constructor() { }
 
   getSessions() {
     return this.sessions
