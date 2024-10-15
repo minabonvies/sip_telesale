@@ -64,8 +64,6 @@ const Text = styled("div")((props) => ({
   ...props.theme.typography.h2,
 }))
 
-const ButtonSection = styled("div")({})
-
 const IconButton = styled(Button)({
   borderRadius: "50%",
   width: "24px",
