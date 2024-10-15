@@ -19,6 +19,7 @@ import ThemeProvider from "@/Provider/ThemeProvider"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import ViewProvider from "@/Provider/ViewProvider"
 import AudioProvider from "@/Provider/AudioProvider"
+import TogglePanelProvider from "@/Provider/TogglePanelProvider/TogglePanelProvider"
 
 export default class BonTalk {
   private rootElement: HTMLElement | null = null
@@ -428,7 +429,9 @@ export default class BonTalk {
           <BonTalkProvider value={this}>
             <AudioProvider>
               <ViewProvider>
-                <App />
+                <TogglePanelProvider>
+                  <App />
+                </TogglePanelProvider>
               </ViewProvider>
             </AudioProvider>
           </BonTalkProvider>
@@ -446,13 +449,11 @@ export default class BonTalk {
    * open or close the panel
    */
   togglePanel() {
-    console.log("togglePanel")
-    console.log(this.rootElement)
     if (!this.rootElement) {
       return
     }
-    const isOpening = this.rootElement.style.transform === "translateX(100%)"
-    this.rootElement.style.transform = isOpening ? "translateX(0)" : "translateX(100%)";
+    const isOpening = this.rootElement.style.transform === "translateX(0%)"
+    this.rootElement.style.transform = isOpening ? "translateX(100%)" : "translateX(0%)";
     if (isOpening) {
       this.rootElement.focus()
     }

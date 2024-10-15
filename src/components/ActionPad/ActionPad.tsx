@@ -18,28 +18,28 @@ export type ActionButtonType = "CALL_VIDEO" | "CALL" | "ACCEPT_PHONE_CALL" | "FO
 export default function ActionPad(props: Props) {
   const actionType = props.actionType || "DEFAULT"
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      e.preventDefault();
-      // 檢查 key 是否為 '0' 到 '9'、'*'、'#'
-      switch (e.key) {
-        case 'Backspace': {
-          props.onButtonClick?.("DELETE")
-          break;
-        }
-        case 'Enter': {
-          props.onButtonClick?.("CALL")
-          break;
-        }
-      }
-    };
+  // useEffect(() => {
+  //   const handleKeyDown = (e: KeyboardEvent) => {
+  //     e.preventDefault();
+  //     // 檢查 key 是否為 '0' 到 '9'、'*'、'#'
+  //     switch (e.key) {
+  //       case 'Backspace': {
+  //         props.onButtonClick?.("DELETE")
+  //         break;
+  //       }
+  //       case 'Enter': {
+  //         props.onButtonClick?.("CALL")
+  //         break;
+  //       }
+  //     }
+  //   };
   
-    window.addEventListener("keydown", handleKeyDown);
+  //   window.addEventListener("keydown", handleKeyDown);
   
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [props]);
+  //   return () => {
+  //     window.removeEventListener("keydown", handleKeyDown);
+  //   };
+  // }, [props]);
 
   return (
     <KeyPadContainer>

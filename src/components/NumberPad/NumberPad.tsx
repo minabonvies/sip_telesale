@@ -1,7 +1,8 @@
-import { useCallback, useEffect } from "react"
+import { useCallback, useContext, useEffect } from "react"
 import { useAudio } from "@/Provider/AudioProvider"
 import KeyPadButton from "../KeyPadButton"
 import KeyPadContainer from "../KeyPadContainer"
+import { TogglePanelContext } from "@/Provider/TogglePanelProvider/TogglePanelProvider"
 
 type Props = {
   dtmf?: boolean
@@ -60,6 +61,7 @@ const KEYS = [
 ];
 
 export default function NumberPad(props: Props) {
+  const { isToggle } = useContext(TogglePanelContext);
   const { toggleDTMF } = useAudio()
 
   const handleKeyPress = useCallback((key: string) => {
@@ -71,6 +73,7 @@ export default function NumberPad(props: Props) {
 
   const setFocus = useCallback((element: HTMLElement | null) => {
     if (element) {
+      console.log("setFocus")
       element.focus();
     }
   }, []);
@@ -79,6 +82,10 @@ export default function NumberPad(props: Props) {
     console.log("Key pressed:", e.key);
     // 在這裡處理鍵盤事件
   };
+
+  useEffect(() => {
+    console.log("isToggle", isToggle)
+  }, [isToggle])
 
   // useEffect(() => {
   //   const handleKeyDown = (e: KeyboardEvent) => {

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useContext, useState } from "react"
 import styled from "@emotion/styled"
 import { SessionState } from "sip.js"
 
@@ -9,6 +9,7 @@ import KeyPad from "@/views/KeyPad"
 import IncomingCall from "@/views/IncomingCall"
 import Calling from "@/views/Calling"
 import { SessionName } from "@/entry/plugin"
+import { TogglePanelContext } from "@/Provider/TogglePanelProvider/TogglePanelProvider"
 
 export default function App() {
   const bonTalk = useBonTalk()!
@@ -25,7 +26,7 @@ export default function App() {
     attendedTransfer,
     sendDTMF,
   } = useUA()
-  const [tempCurrentCallingTarget, setTempCurrentCallingTarget] = useState<SessionName | "">("")
+  const [tempCurrentCallingTarget, setTempCurrentCallingTarget] = useState<SessionName | "">("");
 
   // TODO: need state?
   const currentSession = bonTalk.sessionManager.getSession(currentCallingTarget)
@@ -107,8 +108,10 @@ export default function App() {
     await sendDTMF(key, currentCallingTarget)
   }
 
+  const { isToggle } = useContext(TogglePanelContext);
   return (
     <AppContainer>
+      {isToggle ? <div>toggle true</div> : <div>toggle false</div>}
       <Content>
         {view === "KEY_PAD" ? <KeyPad onCall={handleCall} /> : null}
         {view === "RECEIVED_CALL" ? <IncomingCall displayTitle={callTargetTitle} onAccept={handleAccept} onReject={handleReject} /> : null}
