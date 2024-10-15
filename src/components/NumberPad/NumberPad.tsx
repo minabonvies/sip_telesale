@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect } from "react"
+import { useCallback, useContext, useEffect, useRef } from "react"
 import { useAudio } from "@/Provider/AudioProvider"
 import KeyPadButton from "../KeyPadButton"
 import KeyPadContainer from "../KeyPadContainer"
@@ -61,7 +61,7 @@ const KEYS = [
 ];
 
 export default function NumberPad(props: Props) {
-  const { isToggle } = useContext(TogglePanelContext);
+  const KeyPadContainerRef = useRef<HTMLDivElement>(null);
   const { toggleDTMF } = useAudio()
 
   const handleKeyPress = useCallback((key: string) => {
@@ -83,28 +83,28 @@ export default function NumberPad(props: Props) {
     // 在這裡處理鍵盤事件
   };
 
-  useEffect(() => {
-    console.log("isToggle", isToggle)
-  }, [isToggle])
-
   // useEffect(() => {
-  //   const handleKeyDown = (e: KeyboardEvent) => {
-  //     e.preventDefault();
-  //     const bonTalkRoot = document.querySelector("#_bon_sip_phone_root");
-  //     const bonTalkIsToggle = bonTalkRoot?.getAttribute("data-is-toggle");
-  //      if(bonTalkIsToggle === "true") {
-  //       if (/^[0-9*#]$/.test(e.key)) {
-  //         handleKeyPress(e.key);
-  //       }
-  //      }
-  //   };
+  //   console.log("isToggle", isToggle)
+  // }, [isToggle])
 
-  //   window.addEventListener("keydown", handleKeyDown);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      e.preventDefault();
+      const bonTalkRoot = document.querySelector("#_bon_sip_phone_root");
+      const bonTalkIsToggle = bonTalkRoot?.getAttribute("data-is-toggle");
+       if(bonTalkIsToggle === "true") {
+        if (/^[0-9*#]$/.test(e.key)) {
+          handleKeyPress(e.key);
+        }
+       }
+    };
 
-  //   return () => {
-  //     window.removeEventListener("keydown", handleKeyDown);
-  //   };
-  // }, [handleKeyPress]);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleKeyPress]);
 
   return (
     <KeyPadContainer ref={setFocus} tabIndex={1} onKeyDown={handleKeyDown}>
