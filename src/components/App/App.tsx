@@ -108,7 +108,7 @@ export default function App() {
   }
 
   return (
-    <AppContainer tabIndex={0}>
+    <AppContainer>
       <Content>
         {view === "KEY_PAD" ? <KeyPad onCall={handleCall} /> : null}
         {view === "RECEIVED_CALL" ? <IncomingCall displayTitle={callTargetTitle} onAccept={handleAccept} onReject={handleReject} /> : null}

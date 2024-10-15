@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import styled from "@emotion/styled"
 import Phone from "../Icons/phone"
 import BonTalk from "@/entry/plugin"
@@ -46,7 +46,6 @@ export default function Playground() {
     }
 
     const bonTalkInstance = new BonTalk({
-      buttonElementId: "",
       wsServer: wsServer,
       domains: [domain],
       username: username,
