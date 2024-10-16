@@ -13,9 +13,8 @@ type KeyPadProps = {
 
 export default function KeyPad(props: KeyPadProps) {
   const { inputKeys, enterKey, deleteKey } = useInputKeys()
-
   const handleKeyPress = (key: string) => {
-    enterKey(key)
+      enterKey(key)
   }
 
   const handleActionPress = (action: ActionButtonType) => {
@@ -33,10 +32,34 @@ export default function KeyPad(props: KeyPadProps) {
     }
   }
 
+  const handleFocusKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    console.log("handleFocusKeyDown", e.key);
+    if (/^[0-9*#]$/.test(e.key)) {
+      handleKeyPress(e.key);
+    } else if (e.key === "Enter") {
+      handleActionPress("CALL")
+    } else if (e.key === "Backspace") {
+      handleActionPress("DELETE")
+    } else if (e.key === "Escape") {
+      handleActionPress("HANG")
+    } else {
+      console.log("DEFAULT")
+    }
+  }
+
   return (
     <>
       <Header />
-      <ViewContainer>
+      <ViewContainer
+        id="key-pad"
+        onClick={(e) => {
+          if (e.target instanceof HTMLElement) {
+            e.target.focus();
+          }
+        }}
+        tabIndex={1} 
+        onKeyDown={(e) => handleFocusKeyDown(e)}
+      >
         <KeysText>{inputKeys || "輸入號碼"}</KeysText>
         <div style={{ height: "34px" }} />
         <NumberPad onKeyPress={handleKeyPress} />

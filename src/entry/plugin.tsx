@@ -446,13 +446,17 @@ export default class BonTalk {
    * open or close the panel
    */
   togglePanel() {
-    console.log("togglePanel")
-    console.log(this.rootElement)
     if (!this.rootElement) {
       return
     }
     this.rootElement.style.transform = this.rootElement.style.transform === "translateX(100%)" ? "translateX(0)" : "translateX(100%)";
     this.rootElement?.getAttribute('data-is-toggle') === "true" ? this.rootElement?.setAttribute("data-is-toggle", "false") : this.rootElement?.setAttribute("data-is-toggle", "true")
+  
+    const numberPad = document.getElementById("key-pad");
+    const isToggle = this.rootElement?.getAttribute("data-is-toggle") === "true";
+    if (numberPad && isToggle) {
+      numberPad.focus();
+    }
   }
 
   /**
