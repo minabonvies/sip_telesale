@@ -31,9 +31,8 @@ export default function Calling(props: CallingProps) {
   const currentSession = useSyncExternalStore(bonTalk.sessionManager.subscribe.bind(bonTalk.sessionManager), () =>
     bonTalk.sessionManager.getSession(props.currentSessionName)
   )
-
   const prevSession = useSyncExternalStore(bonTalk.sessionManager.subscribe.bind(bonTalk.sessionManager), () =>
-    bonTalk.sessionManager.getSession(props.prevTarget)
+    bonTalk.sessionManager.getSession(props.prevTarget as SessionName)
   )
 
   const isHold = currentSession?.isHold || false
