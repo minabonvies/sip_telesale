@@ -108,9 +108,12 @@ export default function App() {
     await sendDTMF(key, currentCallingTarget)
   }
 
-  const { isToggle } = useContext(TogglePanelContext);
+  const { isToggle, setIsToggle } = useContext(TogglePanelContext);
   return (
-    <AppContainer>
+    <AppContainer onClick={() => {
+      console.log("AppContainer onClick")
+      setIsToggle(!isToggle)
+    }}>
       {isToggle ? <div>toggle true</div> : <div>toggle false</div>}
       <Content>
         {view === "KEY_PAD" ? <KeyPad onCall={handleCall} /> : null}
