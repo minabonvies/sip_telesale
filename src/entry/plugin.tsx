@@ -459,6 +459,12 @@ export default class BonTalk {
     }
 
     this.rootElement?.getAttribute('data-is-toggle') === "true" ? this.rootElement?.setAttribute("data-is-toggle", "false") : this.rootElement?.setAttribute("data-is-toggle", "true")
+  
+    const numberPad = document.getElementById("key-pad");
+    const isToggle = this.rootElement?.getAttribute("data-is-toggle") === "true";
+    if (numberPad && isToggle) {
+      numberPad.focus();
+    }
   }
 
   /**

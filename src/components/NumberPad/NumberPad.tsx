@@ -1,8 +1,7 @@
-import { useCallback, useContext, useEffect, useRef } from "react"
+import { useCallback } from "react"
 import { useAudio } from "@/Provider/AudioProvider"
 import KeyPadButton from "../KeyPadButton"
 import KeyPadContainer from "../KeyPadContainer"
-import { TogglePanelContext } from "@/Provider/TogglePanelProvider/TogglePanelProvider"
 
 type Props = {
   dtmf?: boolean
@@ -61,8 +60,6 @@ const KEYS = [
 ];
 
 export default function NumberPad(props: Props) {
-  const KeyPadContainerRef = useRef<HTMLDivElement>(null);
-  const { isToggle } = useContext(TogglePanelContext);
   const { toggleDTMF } = useAudio()
 
   const handleKeyPress = useCallback((key: string) => {
@@ -72,55 +69,16 @@ export default function NumberPad(props: Props) {
     }
   }, [props, toggleDTMF])
 
-  const setFocus = useCallback(() => {
-      console.log("setFocus")
-      KeyPadContainerRef.current?.focus();
-  }, []);
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    console.log("Key pressed:", e.key);
-    // 在這裡處理鍵盤事件
-    e.preventDefault();
-    const bonTalkRoot = document.querySelector("#_bon_sip_phone_root");
-    const bonTalkIsToggle = bonTalkRoot?.getAttribute("data-is-toggle");
-      if(bonTalkIsToggle === "true") {
-      if (/^[0-9*#]$/.test(e.key)) {
-        handleKeyPress(e.key);
-      }
-    }
-  };
-  console.log("isToggle", isToggle)
-  useEffect(() => {
-    console.log("isToggle", isToggle)
-    setFocus();
-  }, [isToggle, setFocus])
-
-  // useEffect(() => {
-  //   const handleKeyDown = (e: KeyboardEvent) => {
-  //     e.preventDefault();
-  //     const bonTalkRoot = document.querySelector("#_bon_sip_phone_root");
-  //     const bonTalkIsToggle = bonTalkRoot?.getAttribute("data-is-toggle");
-  //      if(bonTalkIsToggle === "true") {
-  //       if (/^[0-9*#]$/.test(e.key)) {
-  //         handleKeyPress(e.key);
-  //       }
-  //      }
-  //   };
-
-  //   window.addEventListener("keydown", handleKeyDown);
-
-  //   return () => {
-  //     window.removeEventListener("keydown", handleKeyDown);
-  //   };
-  // }, [handleKeyPress]);
-
   return (
-    <KeyPadContainer ref={KeyPadContainerRef} tabIndex={1} onKeyDown={handleKeyDown}>
-      {KEYS.map((key) => (
-        <KeyPadButton key={key.text} text={key.text} subText={key.subText} onClick={() => handleKeyPress(key.text)} tabIndex={0} onKeyDown={() => {
-          console.log("on keyDown test")
-        }} />
-      ))}
-    </KeyPadContainer>
+      <KeyPadContainer>
+        {KEYS.map((key) => (
+          <KeyPadButton 
+            key={key.text} 
+            text={key.text} 
+            subText={key.subText} 
+            onClick={() => handleKeyPress(key.text)} 
+          />
+        ))}
+      </KeyPadContainer>
   )
 }
