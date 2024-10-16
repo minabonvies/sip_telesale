@@ -19,7 +19,6 @@ import ThemeProvider from "@/Provider/ThemeProvider"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import ViewProvider from "@/Provider/ViewProvider"
 import AudioProvider from "@/Provider/AudioProvider"
-import TogglePanelProvider from "@/Provider/TogglePanelProvider/TogglePanelProvider"
 
 export default class BonTalk {
   private rootElement: HTMLElement | null = null
@@ -429,9 +428,7 @@ export default class BonTalk {
           <BonTalkProvider value={this}>
             <AudioProvider>
               <ViewProvider>
-                <TogglePanelProvider>
-                  <App />
-                </TogglePanelProvider>
+                <App />
               </ViewProvider>
             </AudioProvider>
           </BonTalkProvider>
