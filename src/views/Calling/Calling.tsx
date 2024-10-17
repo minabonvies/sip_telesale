@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from "react"
+import { useRef, useState, useSyncExternalStore, useEffect } from "react"
 import styled from "@emotion/styled"
 import ViewContainer from "@/components/ViewContainer"
 import ActionPad, { type ActionButtonType } from "@/components/ActionPad"
@@ -8,6 +8,7 @@ import { useBonTalk } from "@/Provider/BonTalkProvider"
 import NumberPad from "@/components/NumberPad"
 import Header from "@/components/Header"
 import useInputKeys from "@/hooks/useInputKeys"
+import { useAudio } from "@/Provider/AudioProvider"
 
 type CallingProps = {
   currentSessionName: SessionName | ""
@@ -46,12 +47,14 @@ export default function Calling(props: CallingProps) {
   // seconds to hh:mm:ss
   const currentSessionTime = new Date(time * 1000).toISOString().slice(11, 19)
   const prevSessionTime = new Date((prevSession?.time || 0) * 1000).toISOString().slice(11, 19)
+  const { stopRingBackTone } = useAudio()
 
   const handleActionPress = (action: ActionButtonType) => {
     switch (action) {
       case "HANG":
         setOpenKeyPad(false)
         props.onHangClick()
+        stopRingBackTone()
         break
       case "FORWARD":
         props.onForwardClick(inputKeys)
@@ -117,6 +120,18 @@ export default function Calling(props: CallingProps) {
   console.log("keypad", openKeyPad)
   console.log("prevTarget", props.prevTarget)
 
+  const callingRef = useRef<HTMLDivElement>(null);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    console.log("handleKeyDown", e.key)
+    if (e.key === "Enter") {
+      props.onHangClick()
+      stopRingBackTone()
+    }
+  }
+  useEffect(() => {
+    callingRef.current?.focus();
+  }, []);
+  
   return (
     <>
       <Header
@@ -126,7 +141,7 @@ export default function Calling(props: CallingProps) {
         showCancelButton={openKeyPad}
         onCancelClick={handleCancelClick}
       />
-      <ViewContainer>
+      <ViewContainer id="calling" ref={callingRef} tabIndex={0} onKeyDown={handleKeyDown}>
         {/* 通話畫面 */}
         {!openKeyPad ? (
           <>

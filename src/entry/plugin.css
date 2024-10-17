@@ -19,7 +19,3 @@
   transition: transform 0.5s cubic-bezier(0.31, 0.92, 0.79, 0.89);
   will-change: transform;
 }
-
-#key-pad {
-  outline: none;
-}

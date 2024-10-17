@@ -64,9 +64,7 @@ export default function NumberPad(props: Props) {
 
   const handleKeyPress = useCallback((key: string) => {
     props.onKeyPress(key)
-    if (props.dtmf) {
-      toggleDTMF()
-    }
+    toggleDTMF()
   }, [props, toggleDTMF])
 
   return (

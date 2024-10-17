@@ -6,6 +6,7 @@ import NumberPad from "@/components/NumberPad"
 import ActionPad, { type ActionButtonType } from "@/components/ActionPad"
 // import ContentHeader from "@/components/ContentHeader"
 import Header from "@/components/Header"
+import { useAudio } from "@/Provider/AudioProvider"
 
 type KeyPadProps = {
   onCall: (numbers: string) => void
@@ -13,6 +14,7 @@ type KeyPadProps = {
 
 export default function KeyPad(props: KeyPadProps) {
   const { inputKeys, enterKey, deleteKey } = useInputKeys()
+  const { startRingBackTone } = useAudio()
   const handleKeyPress = (key: string) => {
       enterKey(key)
   }
@@ -20,15 +22,14 @@ export default function KeyPad(props: KeyPadProps) {
   const handleActionPress = (action: ActionButtonType) => {
     switch (action) {
       case "CALL":
-        console.log("CALL")
         props.onCall(inputKeys)
+        startRingBackTone();
         break
       case "DELETE":
         deleteKey()
         break
       default:
-        console.log("DEFAULT")
-        break
+        throw new Error("Invalid action")
     }
   }
 
@@ -40,10 +41,8 @@ export default function KeyPad(props: KeyPadProps) {
       handleActionPress("CALL")
     } else if (e.key === "Backspace") {
       handleActionPress("DELETE")
-    } else if (e.key === "Escape") {
-      handleActionPress("HANG")
     } else {
-      console.log("DEFAULT")
+      throw new Error("Invalid key")
     }
   }
 
