@@ -14,16 +14,19 @@ type KeyPadProps = {
 
 export default function KeyPad(props: KeyPadProps) {
   const { inputKeys, enterKey, deleteKey } = useInputKeys()
-  const { startRingBackTone } = useAudio()
+  const { toggleDTMF, startRingBackTone } = useAudio()
   const handleKeyPress = (key: string) => {
       enterKey(key)
+      toggleDTMF()
   }
-
+  console.log("inputKeys", inputKeys ? "true" : "false")
   const handleActionPress = (action: ActionButtonType) => {
     switch (action) {
       case "CALL":
-        props.onCall(inputKeys)
-        startRingBackTone();
+        if (inputKeys) {
+          props.onCall(inputKeys)
+          startRingBackTone();
+        }
         break
       case "DELETE":
         deleteKey()
