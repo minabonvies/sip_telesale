@@ -30,18 +30,18 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
   const dtmfRef = useRef<HTMLAudioElement | null>(null)
 
   const startRingBackTone = () => {
-    if (!ringToneRef.current) return
+    if (!ringBacktoneRef.current) return
     try {
-      ringToneRef.current.play()
+      ringBacktoneRef.current.play()
     } catch (err) {
       console.error(err)
     }
   }
 
   const stopRingBackTone = () => {
-    if (!ringToneRef.current) return
+    if (!ringBacktoneRef.current) return
     try {
-      ringToneRef.current.pause()
+      ringBacktoneRef.current.pause()
     } catch (err) {
       console.error(err)
     }
