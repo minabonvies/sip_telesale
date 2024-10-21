@@ -10,7 +10,6 @@ type AudioContextType = {
   toggleDTMF: () => void
 }
 
-const isDEV = process.env.NODE_ENV === "development"
 const AudioContext = createContext<AudioContextType | null>(null)
 
 export const useAudio = () => {
