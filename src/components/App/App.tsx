@@ -9,6 +9,7 @@ import KeyPad from "@/views/KeyPad"
 import IncomingCall from "@/views/IncomingCall"
 import Calling from "@/views/Calling"
 import { SessionName } from "@/entry/plugin"
+import { useAudio } from "@/Provider/AudioProvider"
 
 export default function App() {
   const bonTalk = useBonTalk()!
@@ -27,6 +28,8 @@ export default function App() {
   } = useUA()
   const [tempCurrentCallingTarget, setTempCurrentCallingTarget] = useState<SessionName | "">("");
 
+  const { startRingBackTone, stopRingBackTone } = useAudio()
+
   // TODO: need state?
   const currentSession = bonTalk.sessionManager.getSession(currentCallingTarget)
 
@@ -34,13 +37,17 @@ export default function App() {
 
   const handleCall = async (numbers: string) => {
     const inviter = await audioCall(numbers, "outgoing")
+
     setView("IN_CALL")
+    startRingBackTone()
     setCurrentCallingTarget("outgoing")
     inviter!.stateChange.addListener((state: SessionState) => {
+      stopRingBackTone()
       switch (state) {
         case SessionState.Terminated:
           setView("KEY_PAD")
           setCurrentCallingTarget("")
+          console.warn("inviter", state)
           break
       }
     })

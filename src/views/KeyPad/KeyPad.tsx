@@ -14,7 +14,7 @@ type KeyPadProps = {
 
 export default function KeyPad(props: KeyPadProps) {
   const { inputKeys, enterKey, deleteKey } = useInputKeys()
-  const { toggleDTMF, startRingBackTone } = useAudio()
+  const { toggleDTMF } = useAudio()
   const handleKeyPress = (key: string) => {
       enterKey(key)
       toggleDTMF()
@@ -25,7 +25,6 @@ export default function KeyPad(props: KeyPadProps) {
       case "CALL":
         if (inputKeys) {
           props.onCall(inputKeys)
-          startRingBackTone();
         }
         break
       case "DELETE":
@@ -37,7 +36,6 @@ export default function KeyPad(props: KeyPadProps) {
   }
 
   const handleFocusKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    console.log("handleFocusKeyDown", e.key);
     if (/^[0-9*#]$/.test(e.key)) {
       handleKeyPress(e.key);
     } else if (e.key === "Enter") {

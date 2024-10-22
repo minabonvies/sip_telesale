@@ -8,7 +8,6 @@ import { useBonTalk } from "@/Provider/BonTalkProvider"
 import NumberPad from "@/components/NumberPad"
 import Header from "@/components/Header"
 import useInputKeys from "@/hooks/useInputKeys"
-import { useAudio } from "@/Provider/AudioProvider"
 
 type CallingProps = {
   currentSessionName: SessionName | ""
@@ -47,24 +46,26 @@ export default function Calling(props: CallingProps) {
   // seconds to hh:mm:ss
   const currentSessionTime = new Date(time * 1000).toISOString().slice(11, 19)
   const prevSessionTime = new Date((prevSession?.time || 0) * 1000).toISOString().slice(11, 19)
-  const { stopRingBackTone } = useAudio()
 
   const handleActionPress = (action: ActionButtonType) => {
     switch (action) {
       case "HANG":
         setOpenKeyPad(false)
         props.onHangClick()
-        stopRingBackTone()
+        console.warn("HANG")
         break
       case "FORWARD":
         props.onForwardClick(inputKeys)
+        console.warn("FORWARD")
         break
       case "PRE_FORWARD":
         handlePreForwardSendCall()
+        console.warn("PRE_FORWARD")
         break
 
       case "DELETE":
         deleteKey()
+        console.warn("DELETE")
         break
       default:
         console.log(action)
@@ -119,13 +120,11 @@ export default function Calling(props: CallingProps) {
 
   console.log("keypad", openKeyPad)
   console.log("prevTarget", props.prevTarget)
-
   const callingRef = useRef<HTMLDivElement>(null);
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     console.log("handleKeyDown", e.key)
     if (e.key === "Enter") {
       props.onHangClick()
-      stopRingBackTone()
     }
   }
   useEffect(() => {
