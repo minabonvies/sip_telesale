@@ -46,7 +46,7 @@ const KEYS = [
     subText: "WXYZ",
   },
   {
-    text: "＊",
+    text: "*",
     subText: "",
   },
   {
