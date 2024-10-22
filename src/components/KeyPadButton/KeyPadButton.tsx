@@ -12,7 +12,7 @@ export default function KeyPadButton(props: Props) {
 
   return (
     <KeyPadButtonContainer {...restProps} >
-      <div className="text">{text}</div>
+      <div className="text">{text=== "*" ? "＊" : text}</div> 
       {subText ? <div className="subText">{subText}</div> : null}
     </KeyPadButtonContainer>
   )
