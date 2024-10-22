@@ -26,7 +26,7 @@ const KeyPadButtonContainer = styled(Button)(() => {
     borderRadius: "50%",
     border: "none",
     padding: "unset",
-
+    outline: "none",
     margin: "auto",
 
     "& > .text": {

@@ -7,6 +7,7 @@ const ViewContainer = styled.div({
   alignItems: "center",
   paddingTop: "16px",
   paddingBottom: "18px",
+  outline: "none"
 })
 
 export default ViewContainer

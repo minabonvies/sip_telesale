@@ -6,6 +6,7 @@ import NumberPad from "@/components/NumberPad"
 import ActionPad, { type ActionButtonType } from "@/components/ActionPad"
 // import ContentHeader from "@/components/ContentHeader"
 import Header from "@/components/Header"
+import { useAudio } from "@/Provider/AudioProvider"
 
 type KeyPadProps = {
   onCall: (numbers: string) => void
@@ -13,37 +14,36 @@ type KeyPadProps = {
 
 export default function KeyPad(props: KeyPadProps) {
   const { inputKeys, enterKey, deleteKey } = useInputKeys()
+  const { toggleDTMF } = useAudio()
   const handleKeyPress = (key: string) => {
       enterKey(key)
+      toggleDTMF()
   }
-
+  console.log("inputKeys", inputKeys ? "true" : "false")
   const handleActionPress = (action: ActionButtonType) => {
     switch (action) {
       case "CALL":
-        console.log("CALL")
-        props.onCall(inputKeys)
+        if (inputKeys) {
+          props.onCall(inputKeys)
+        }
         break
       case "DELETE":
         deleteKey()
         break
       default:
-        console.log("DEFAULT")
-        break
+        throw new Error("Invalid action")
     }
   }
 
   const handleFocusKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    console.log("handleFocusKeyDown", e.key);
     if (/^[0-9*#]$/.test(e.key)) {
       handleKeyPress(e.key);
     } else if (e.key === "Enter") {
       handleActionPress("CALL")
     } else if (e.key === "Backspace") {
       handleActionPress("DELETE")
-    } else if (e.key === "Escape") {
-      handleActionPress("HANG")
     } else {
-      console.log("DEFAULT")
+      throw new Error("Invalid key")
     }
   }
 

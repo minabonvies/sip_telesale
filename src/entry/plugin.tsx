@@ -211,6 +211,7 @@ export default class BonTalk {
 
     const targetURI = BonTalk.makeURI(this.urlTemplate(target))
     const inviter = new Inviter(this.userAgent, targetURI)
+    console.warn("inviter", inviter.stateChange)
     this.sessionManager.addSession(as, inviter)
     inviter.stateChange.addListener((state: SessionState) => {
       switch (state) {

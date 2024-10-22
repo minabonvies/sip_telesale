@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from "react"
+import { useRef, useState, useSyncExternalStore, useEffect } from "react"
 import styled from "@emotion/styled"
 import ViewContainer from "@/components/ViewContainer"
 import ActionPad, { type ActionButtonType } from "@/components/ActionPad"
@@ -52,16 +52,20 @@ export default function Calling(props: CallingProps) {
       case "HANG":
         setOpenKeyPad(false)
         props.onHangClick()
+        console.warn("HANG")
         break
       case "FORWARD":
         props.onForwardClick(inputKeys)
+        console.warn("FORWARD")
         break
       case "PRE_FORWARD":
         handlePreForwardSendCall()
+        console.warn("PRE_FORWARD")
         break
 
       case "DELETE":
         deleteKey()
+        console.warn("DELETE")
         break
       default:
         console.log(action)
@@ -116,7 +120,17 @@ export default function Calling(props: CallingProps) {
 
   console.log("keypad", openKeyPad)
   console.log("prevTarget", props.prevTarget)
-
+  const callingRef = useRef<HTMLDivElement>(null);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    console.log("handleKeyDown", e.key)
+    if (e.key === "Enter") {
+      props.onHangClick()
+    }
+  }
+  useEffect(() => {
+    callingRef.current?.focus();
+  }, []);
+  
   return (
     <>
       <Header
@@ -126,7 +140,7 @@ export default function Calling(props: CallingProps) {
         showCancelButton={openKeyPad}
         onCancelClick={handleCancelClick}
       />
-      <ViewContainer>
+      <ViewContainer id="calling" ref={callingRef} tabIndex={0} onKeyDown={handleKeyDown}>
         {/* 通話畫面 */}
         {!openKeyPad ? (
           <>
