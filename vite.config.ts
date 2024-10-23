@@ -13,5 +13,8 @@ export default ({ mode }) => {
     // server: {
     //   open: process.env.VITE_OPEN,
     // },
+    server: {
+      port: 3005,
+    },
   })
 }
