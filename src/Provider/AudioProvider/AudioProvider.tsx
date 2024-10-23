@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef } from "react"
+import { createContext, useContext, useRef, useEffect } from "react"
 import ringtone from "@/assets/sounds/ringtone.wav"
 import ringbacktone from "@/assets/sounds/ringbacktone.wav"
 import dtmf from "@/assets/sounds/dtmf.wav"
@@ -81,6 +81,13 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
     }
   }
 
+  // 添加 useEffect 来设置音频源
+  useEffect(() => {
+    if (ringToneRef.current) ringToneRef.current.src = ringtone
+    if (ringBacktoneRef.current) ringBacktoneRef.current.src = ringbacktone
+    if (dtmfRef.current) dtmfRef.current.src = dtmf
+  }, [])
+
   return (
     <AudioContext.Provider
       value={{
@@ -92,9 +99,9 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
       }}
     >
       <audio id={bonTalk!.audioElementId} />
-      <audio loop ref={ringBacktoneRef} src={ringbacktone} />
-      <audio loop ref={ringToneRef} src={ringtone} />
-      <audio ref={dtmfRef} src={dtmf} />
+      <audio loop ref={ringBacktoneRef} />
+      <audio loop ref={ringToneRef} />
+      <audio ref={dtmfRef} />
       {children}
     </AudioContext.Provider>
   )
