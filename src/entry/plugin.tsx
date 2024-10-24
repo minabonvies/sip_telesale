@@ -436,6 +436,9 @@ export default class BonTalk {
         </ThemeProvider>
       </ErrorBoundary>
     )
+    /*
+     Make sure to perform the togglePanel operation after the React component has finished rendering.
+    */ 
     setTimeout(() => {
       if (this.rootElement) {
         this.togglePanel()

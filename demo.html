@@ -6,20 +6,33 @@
     <title>Document</title>
   </head>
   <body>
-    <h1>123</h1>
-    <button id="phone-btn">123</button>
+    <h1>BonTalk Build Demo</h1>
+    <button id="phone-btn">bonTalk init</button>
   </body>
   <script src="./dist/bonTalk.umd.js"></script>
   <script defer>
-    const bonTalk = new BonTalk({
-      buttonElementId: "phone-btn",
-      wsServer: "wss://demo.sip.telesale.org:7443/ws",
-      domains: ["demo.sip.telesale.org"],
-      username: "3003",
-      password: "42633506",
-      displayName: "3003 Charlie",
+    let bonTalk
+
+    const bonTalkInstance = new BonTalk({
+      wsServer: "wss://bonuc.sbc.telesale.org:7443/ws",
+      domains: ["bonuc.sbc.telesale.org"],
+      username: "3004",
+      password: "1234",
+      displayName: "3004 Leo",
     })
 
-    bonTalk.render()
+    const bonTalkBtn = document.getElementById("phone-btn")
+    bonTalkBtn.addEventListener("click", () => {
+      console.log(bonTalk)
+      if (!bonTalk) {
+        console.log("init")
+        bonTalkInstance.init()
+        bonTalk = bonTalkInstance
+         console.log(bonTalk)
+      } else {
+        console.log("toggle")
+        bonTalk.togglePanel()
+      }
+    })
   </script>
 </html>
