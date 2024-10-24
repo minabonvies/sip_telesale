@@ -1,7 +1,7 @@
 {
   "name": "@bonvies/bontalk",
   "author": "Bonvies <info@bonvies.com>",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "type": "module",
   "main": "dist/bonTalk.cjs.js",
   "module": "dist/bonTalk.umd.js",
