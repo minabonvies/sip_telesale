@@ -62,19 +62,18 @@ export default function Playground() {
           {
             breakpoint: 768,  // >= 768px
             position: 'left',
-            topOffset: 100,
+            topOffset: 70,
           },
           {
             breakpoint: 480,  // >= 480px
             position: 'left',
-            topOffset: 120,
+            topOffset: 100,
           },
           {
             breakpoint: 1024, // >= 1024px
             position: 'right',
-            topOffset: 70,
+            topOffset: 50,
           }
-
         ]
       }
     })
@@ -175,7 +174,6 @@ export default function Playground() {
 
 const Container = styled.div({
   width: "100vw",
-  height: "100vh",
   display: "flex",
   flexDirection: "column",
   backgroundColor: "#f0f0f0",
@@ -190,6 +188,18 @@ const Nav = styled.nav({
   maxWidth: "100%",
   backgroundColor: "#333",
   color: "white",
+
+  "@media (max-width: 480px)": {
+    height: "70px",
+  },
+  
+  "@media (max-width: 768px)": {
+    height: "100px",
+  },
+  
+  "@media (min-width: 1024px)": {
+    height: "50px",
+  },
 })
 
 const Title = styled.div({
