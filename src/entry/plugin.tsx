@@ -20,6 +20,19 @@ import ErrorBoundary from "@/components/ErrorBoundary"
 import ViewProvider from "@/Provider/ViewProvider"
 import AudioProvider from "@/Provider/AudioProvider"
 
+type ResponsiveConfig = {
+  breakpoint: number;
+  position?: 'left' | 'right';
+  topOffset?: number;
+  hidden?: boolean;
+}
+
+type PanelConfig = {
+  position?: 'left' | 'right';
+  topOffset?: number;
+  responsive?: ResponsiveConfig[];
+}
+
 export default class BonTalk {
   private rootElement: HTMLElement | null = null
   private reactRoot: ReactDOM.Root | null = null
@@ -40,6 +53,8 @@ export default class BonTalk {
   public sessionManager: SessionManager = new SessionManager()
 
   private themeColor?: string
+  private panelConfig?: PanelConfig;
+  private resizeObserver: ResizeObserver | null = null;
 
   static get audioElementId() {
     return "_bon_sip_phone_audio"
@@ -85,6 +100,7 @@ export default class BonTalk {
     password,
     displayName,
     themeColor,
+    panelConfig = {},
   }: {
     wsServer: string
     domains: string[]
@@ -92,6 +108,7 @@ export default class BonTalk {
     password: string
     displayName: string
     themeColor?: string
+    panelConfig?: PanelConfig
   }) {
     this.wsServer = wsServer
 
@@ -103,6 +120,14 @@ export default class BonTalk {
     this.username = username
     this.password = password
     this.displayName = displayName
+
+    this.themeColor = themeColor
+    // Set default values for panel configuration
+    this.panelConfig = {
+      position: panelConfig.position || 'right',
+      topOffset: panelConfig.topOffset || 0,
+      responsive: panelConfig.responsive || []
+    };
 
     const uri = UserAgent.makeURI(this.urlTemplate(username))
     if (!uri) {
@@ -125,8 +150,81 @@ export default class BonTalk {
     this.registerer = new Registerer(this.userAgent, {
       expires: this.registerExpires,
     })
+  }
 
-    this.themeColor = themeColor
+  private setupResizeObserver() {
+    if (this.resizeObserver) {
+      return;
+    }
+
+    this.resizeObserver = new ResizeObserver(() => {
+      this.handleResize();
+    });
+
+    this.resizeObserver.observe(document.body);
+  }
+
+  private handleResize() {
+    if (!this.rootElement || !this.panelConfig?.responsive) {
+      return;
+    }
+
+    const width = window.innerWidth;
+
+    // Sort responsive configs by breakpoint in descending order
+    const sortedConfigs = [...this.panelConfig.responsive]
+      .sort((a, b) => b.breakpoint - a.breakpoint);
+
+    // Initialize newConfig with default values
+    const newConfig = {
+      position: this.panelConfig.position,
+      topOffset: this.panelConfig.topOffset,
+      hidden: false
+    };
+
+    // Find the first matching breakpoint and merge configurations
+    for (const config of sortedConfigs) {
+      if (width >= config.breakpoint) {
+        Object.assign(newConfig, config);
+        break;
+      }
+    }
+
+    // Apply the new configuration
+    this.applyPanelStyles(newConfig);
+    
+    // 重新调用togglePanel以确保正确的开关状态
+    this.togglePanel();
+  }
+
+  private applyPanelStyles(config: {
+    position?: 'left' | 'right';
+    topOffset?: number;
+    hidden?: boolean;
+  }) {
+    if (!this.rootElement) {
+      return;
+    }
+
+    const positionStyles = {
+      left: { left: '0', right: 'auto' },
+      right: { right: '0', left: 'auto' }
+    };
+
+    const { left, right } = positionStyles[config.position || 'right'];
+    this.rootElement.style.left = left;
+    this.rootElement.style.right = right;
+
+    // Top offset
+    this.rootElement.style.top = `${config.topOffset || 0}px`;
+
+    // Visibility
+    this.rootElement.style.display = config.hidden ? 'none' : 'block';
+
+    // 初始状态设置为关闭
+    this.rootElement.style.transform = config.position === 'left'
+      ? 'translateX(-100%)'
+      : 'translateX(100%)';
   }
 
   get userAgentInstance() {
@@ -416,11 +514,33 @@ export default class BonTalk {
     root.id = this.rootId
     root.dataset.isToggle = "false"
     this.rootElement = root
-    this.rootElement.style.position = "fixed"
-    this.rootElement.style.top = "0"
-    this.rootElement.style.right = "0"
-    this.rootElement.style.transform = "translateX(100%)"
+
+    // Apply initial styles
+    this.rootElement.style.position = "fixed";
+    this.rootElement.style.transition = "transform 0.3s linear";
+
+    // 應用初始配置
+    // Apply initial configuration
+
+    // 獲取當前窗口寬度
+    const windowWidth = window.innerWidth
+
+    // 根據斷點從大到小排序配置數組
+    const sortBreakpoint = this.panelConfig?.responsive?.sort((a, b) => b.breakpoint - a.breakpoint)
+    // 找到第一個小於或等於當前窗口寬度的斷點配置
+    const breakpoint = sortBreakpoint?.find((item) => windowWidth >= item.breakpoint)
+    // 應用面板樣式
+    this.applyPanelStyles({
+      // 使用找到的斷點位置,如果沒有則使用默認位置
+      position: breakpoint?.position || this.panelConfig?.position,
+      // 使用找到的斷點頂部偏移,如果沒有則使用默認頂部偏移
+      topOffset: breakpoint?.topOffset || this.panelConfig?.topOffset,
+    });
+
     body.appendChild(root)
+
+    // Setup resize observer for responsive behavior
+    this.setupResizeObserver();
 
     this.reactRoot = ReactDOM.createRoot(root)
     this.reactRoot.render(
@@ -436,14 +556,6 @@ export default class BonTalk {
         </ThemeProvider>
       </ErrorBoundary>
     )
-    /*
-     Make sure to perform the togglePanel operation after the React component has finished rendering.
-    */ 
-    setTimeout(() => {
-      if (this.rootElement) {
-        this.togglePanel()
-      }
-    }, 0)
   }
 
   /**
@@ -451,19 +563,20 @@ export default class BonTalk {
    */
   togglePanel() {
     if (!this.rootElement) {
-      return
+      return;
     }
-    const isOpening = this.rootElement.style.transform === "translateX(0%)"
-    this.rootElement.style.transform = isOpening ? "translateX(100%)" : "translateX(0%)";
-    if (isOpening) {
-      this.rootElement.focus()
-    }
+    
+    const isOpening = this.rootElement.style.transform !== 'translateX(0%)';
+    const position = this.rootElement.style.right === 'auto' ? 'left' : 'right';
 
-    this.rootElement?.getAttribute('data-is-toggle') === "true" ? this.rootElement?.setAttribute("data-is-toggle", "false") : this.rootElement?.setAttribute("data-is-toggle", "true")
-  
+    this.rootElement.style.transform = isOpening
+      ? 'translateX(0%)'
+      : `translateX(${position === 'left' ? '-100%' : '100%'})`;
+
+    this.rootElement.dataset.isToggle = isOpening ? 'true' : 'false';
+
     const numberPad = document.getElementById("key-pad");
-    const isToggle = this.rootElement?.getAttribute("data-is-toggle") === "true";
-    if (numberPad && isToggle) {
+    if (numberPad && isOpening) {
       numberPad.focus();
     }
   }
@@ -473,11 +586,14 @@ export default class BonTalk {
    * should call before destroy the element
    */
   destroy() {
-    if (!this.reactRoot) {
-      return
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
     }
 
-    this.reactRoot.unmount()
+    if (this.reactRoot) {
+      this.reactRoot.unmount();
+    }
   }
 
   /**
@@ -671,3 +787,4 @@ class SessionManager {
     })
   }
 }
+
