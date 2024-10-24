@@ -64,6 +64,7 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
   const toggleDTMF = async () => {
     try {
       if (dtmfAudio.paused) {
+
         await dtmfAudio.play()
       } else {
         dtmfAudio.pause()
