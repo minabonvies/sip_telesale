@@ -56,13 +56,12 @@ export default function Playground() {
         topOffset: 70,
         responsive: [
           {
-            breakpoint: 1024, // >= 1024px
-            position: 'right',
-            topOffset: 70,
+            breakpoint: 320,  // >= 320px
+            hidden: true     // 在小螢幕上隱藏
           },
           {
             breakpoint: 768,  // >= 768px
-            position: 'right',
+            position: 'left',
             topOffset: 100,
           },
           {
@@ -71,9 +70,11 @@ export default function Playground() {
             topOffset: 120,
           },
           {
-            breakpoint: 320,  // >= 320px
-            hidden: true     // 在小螢幕上隱藏
+            breakpoint: 1024, // >= 1024px
+            position: 'right',
+            topOffset: 70,
           }
+
         ]
       }
     })
