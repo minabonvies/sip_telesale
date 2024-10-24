@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef, useEffect } from "react"
+import { createContext, useContext, useRef } from "react"
 import ringtone from "@/assets/sounds/ringtone.wav"
 import ringbacktone from "@/assets/sounds/ringbacktone.wav"
 import dtmf from "@/assets/sounds/dtmf.wav"
@@ -29,10 +29,10 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
   const ringBacktoneRef = useRef<HTMLAudioElement | null>(null)
   const dtmfRef = useRef<HTMLAudioElement | null>(null)
 
-  const startRingBackTone = () => {
+  const startRingBackTone = async () => {
     if (!ringBacktoneRef.current) return
     try {
-      ringBacktoneRef.current.play()
+      await ringBacktoneRef.current.play()
     } catch (err) {
       console.error(err)
     }
@@ -47,10 +47,10 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
     }
   }
 
-  const startRingTone = () => {
+  const startRingTone = async () => {
     if (!ringToneRef.current) return
     try {
-      ringToneRef.current.play()
+      await ringToneRef.current.play()
     } catch (err) {
       console.error(err)
     }
@@ -65,28 +65,21 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
     }
   }
 
-  const toggleDTMF = () => {
+  const toggleDTMF = async () => {
     if (!dtmfRef.current) return
 
     try {
       if (dtmfRef.current.paused) {
-        dtmfRef.current.play()
+        await dtmfRef.current.play()
       } else {
         dtmfRef.current.pause()
         dtmfRef.current.currentTime = 0
-        dtmfRef.current.play()
+        await dtmfRef.current.play()
       }
     } catch (err) {
       console.error(err)
     }
   }
-
-  // 添加 useEffect 来设置音频源
-  useEffect(() => {
-    if (ringToneRef.current) ringToneRef.current.src = ringtone
-    if (ringBacktoneRef.current) ringBacktoneRef.current.src = ringbacktone
-    if (dtmfRef.current) dtmfRef.current.src = dtmf
-  }, [])
 
   return (
     <AudioContext.Provider
@@ -99,9 +92,9 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
       }}
     >
       <audio id={bonTalk!.audioElementId} />
-      <audio loop ref={ringBacktoneRef} />
-      <audio loop ref={ringToneRef} />
-      <audio ref={dtmfRef} />
+      <audio loop ref={ringBacktoneRef} src={ringbacktone} />
+      <audio loop ref={ringToneRef} src={ringtone} />
+      <audio ref={dtmfRef} src={dtmf} />
       {children}
     </AudioContext.Provider>
   )
