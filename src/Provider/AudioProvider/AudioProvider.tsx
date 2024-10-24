@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef } from "react"
+import { createContext, useContext } from "react"
 import ringtone from "@/assets/sounds/ringtone.wav"
 import ringbacktone from "@/assets/sounds/ringbacktone.wav"
 import dtmf from "@/assets/sounds/dtmf.wav"
@@ -12,7 +12,6 @@ type AudioContextType = {
   toggleDTMF: () => void
 }
 
-// const isDEV = process.env.NODE_ENV === "development"
 const AudioContext = createContext<AudioContextType | null>(null)
 
 export const useAudio = () => {
@@ -25,56 +24,51 @@ export const useAudio = () => {
 
 export default function AudioProvider({ children }: { children: React.ReactNode }) {
   const bonTalk = useBonTalk()
-  const ringToneRef = useRef<HTMLAudioElement | null>(null)
-  const ringBacktoneRef = useRef<HTMLAudioElement | null>(null)
-  const dtmfRef = useRef<HTMLAudioElement | null>(null)
+
+  const ringToneAudio = new Audio(ringtone)
+  const ringBacktoneAudio = new Audio(ringbacktone)
+  const dtmfAudio = new Audio(dtmf)
 
   const startRingBackTone = async () => {
-    if (!ringBacktoneRef.current) return
     try {
-      await ringBacktoneRef.current.play()
+      await ringBacktoneAudio.play()
     } catch (err) {
       console.error(err)
     }
   }
 
   const stopRingBackTone = () => {
-    if (!ringBacktoneRef.current) return
     try {
-      ringBacktoneRef.current.pause()
+      ringBacktoneAudio.pause()
     } catch (err) {
       console.error(err)
     }
   }
 
   const startRingTone = async () => {
-    if (!ringToneRef.current) return
     try {
-      await ringToneRef.current.play()
+      await ringToneAudio.play()
     } catch (err) {
       console.error(err)
     }
   }
 
   const stopRingTone = () => {
-    if (!ringToneRef.current) return
     try {
-      ringToneRef.current.pause()
+      ringToneAudio.pause()
     } catch (err) {
       console.error(err)
     }
   }
 
   const toggleDTMF = async () => {
-    if (!dtmfRef.current) return
-
     try {
-      if (dtmfRef.current.paused) {
-        await dtmfRef.current.play()
+      if (dtmfAudio.paused) {
+        await dtmfAudio.play()
       } else {
-        dtmfRef.current.pause()
-        dtmfRef.current.currentTime = 0
-        await dtmfRef.current.play()
+        dtmfAudio.pause()
+        dtmfAudio.currentTime = 0
+        await dtmfAudio.play()
       }
     } catch (err) {
       console.error(err)
@@ -92,9 +86,6 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
       }}
     >
       <audio id={bonTalk!.audioElementId} />
-      <audio loop ref={ringBacktoneRef} src={ringbacktone} />
-      <audio loop ref={ringToneRef} src={ringtone} />
-      <audio ref={dtmfRef} src={dtmf} />
       {children}
     </AudioContext.Provider>
   )
