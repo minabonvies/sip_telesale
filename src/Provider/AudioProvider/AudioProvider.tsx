@@ -1,7 +1,7 @@
 import { createContext, useContext, useRef } from "react"
-import ringtone from "@/assets/sounds/ringtone.wav"
-import ringbacktone from "@/assets/sounds/ringbacktone.wav"
-import dtmf from "@/assets/sounds/dtmf.wav"
+import ringtone from "@/assets/sounds/ringtone.mp3"
+import ringbacktone from "@/assets/sounds/ringbacktone.mp3"
+import dtmf from "@/assets/sounds/dtmf.mp3"
 
 import { useBonTalk } from "../BonTalkProvider"
 type AudioContextType = {

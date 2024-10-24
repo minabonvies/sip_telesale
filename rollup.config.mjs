@@ -47,7 +47,7 @@ export default {
     {
       name: "assets",
       load(id) {
-        if (id.endsWith(".svg") || id.endsWith(".wav")) {
+        if (id.endsWith(".svg") || id.endsWith(".mp3")) {
           console.log("id:", id)
           const mimeType = mime.lookup(id)
           const data = fs.readFileSync(id)
@@ -56,7 +56,7 @@ export default {
         }
       },
       resolveId(source) {
-        if (source.endsWith(".svg") || source.endsWith(".wav")) {
+        if (source.endsWith(".svg") || source.endsWith(".mp3")) {
           if (source.startsWith("/")) {
             return path.resolve(__dirname, "public", source.slice(1))
           }
