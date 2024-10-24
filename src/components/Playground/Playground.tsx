@@ -51,6 +51,31 @@ export default function Playground() {
       username: username,
       password: password,
       displayName: displayName,
+      panelConfig: {
+        position: 'right',
+        topOffset: 70,
+        responsive: [
+          {
+            breakpoint: 1024, // >= 1024px
+            position: 'right',
+            topOffset: 70,
+          },
+          {
+            breakpoint: 768,  // >= 768px
+            position: 'right',
+            topOffset: 100,
+          },
+          {
+            breakpoint: 480,  // >= 480px
+            position: 'left',
+            topOffset: 120,
+          },
+          {
+            breakpoint: 320,  // >= 320px
+            hidden: true     // 在小螢幕上隱藏
+          }
+        ]
+      }
     })
     setBonTalk(bonTalkInstance)
     bonTalkInstance.init()
