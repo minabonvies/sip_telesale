@@ -24,9 +24,6 @@ const data = [
 export default function Playground() {
   const [open, setOpen] = useState(false)
   const [bonTalk, setBonTalk] = useState<BonTalk | null>(null)
-  // useEffect(() => {
-  //   bonTalk.init()
-  // }, [])
 
   const handleOpenPanel = () => {
     if (bonTalk) {
@@ -54,6 +51,7 @@ export default function Playground() {
       panelConfig: {
         position: 'right',
         topOffset: 70,
+        zIndex: 1000, // 使用用戶設置的 zIndex
         responsive: [
           {
             breakpoint: 320,  // >= 320px
@@ -63,6 +61,7 @@ export default function Playground() {
             breakpoint: 768,  // >= 768px
             position: 'left',
             topOffset: 70,
+            zIndex: 10000, // 可以為不同斷點設置不同的 zIndex
           },
           {
             breakpoint: 480,  // >= 480px
@@ -97,7 +96,7 @@ export default function Playground() {
         <IconButton onClick={handleOpenPanel}>
           <Phone />
         </IconButton>
-        <Button onClick={() => setOpen(true)}>PHONE SETTINGS</Button>
+        <Button onClick={() => setOpen((prev) => !prev)}>PHONE SETTINGS</Button>
       </Nav>
       <Body>
         {open && (
@@ -174,7 +173,8 @@ export default function Playground() {
 
 const Container = styled.div({
   width: "100vw",
-  display: "flex",
+  height: "100vh",
+
   flexDirection: "column",
   backgroundColor: "#f0f0f0",
 })
@@ -188,6 +188,7 @@ const Nav = styled.nav({
   maxWidth: "100%",
   backgroundColor: "#333",
   color: "white",
+  zIndex: 100,
 
   "@media (max-width: 480px)": {
     height: "70px",

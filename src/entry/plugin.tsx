@@ -23,6 +23,7 @@ import AudioProvider from "@/Provider/AudioProvider"
 type ResponsiveConfig = {
   breakpoint: number;
   position?: 'left' | 'right';
+  zIndex?: number;
   topOffset?: number;
   hidden?: boolean;
 }
@@ -30,6 +31,7 @@ type ResponsiveConfig = {
 type PanelConfig = {
   position?: 'left' | 'right';
   topOffset?: number;
+  zIndex?: number;
   responsive?: ResponsiveConfig[];
 }
 
@@ -126,6 +128,7 @@ export default class BonTalk {
     this.panelConfig = {
       position: panelConfig.position || 'right',
       topOffset: panelConfig.topOffset || 0,
+      zIndex: panelConfig.zIndex || 1000, // 設置默認 zIndex
       responsive: panelConfig.responsive || []
     };
 
@@ -179,6 +182,7 @@ export default class BonTalk {
     const newConfig = {
       position: this.panelConfig.position,
       topOffset: this.panelConfig.topOffset,
+      zIndex: this.panelConfig.zIndex,
       hidden: false
     };
 
@@ -200,6 +204,7 @@ export default class BonTalk {
   private applyPanelStyles(config: {
     position?: 'left' | 'right';
     topOffset?: number;
+    zIndex?: number;
     hidden?: boolean;
   }) {
     if (!this.rootElement) {
@@ -225,6 +230,9 @@ export default class BonTalk {
     this.rootElement.style.transform = config.position === 'left'
       ? 'translateX(-100%)'
       : 'translateX(100%)';
+
+    // 設置 zIndex
+    this.rootElement.style.zIndex = `${config.zIndex || this.panelConfig?.zIndex}`;
   }
 
   get userAgentInstance() {
