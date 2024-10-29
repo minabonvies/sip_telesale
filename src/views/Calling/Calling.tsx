@@ -118,8 +118,6 @@ export default function Calling(props: CallingProps) {
     setOpenKeyPad(false)
   }
 
-  console.log("keypad", openKeyPad)
-  console.log("prevTarget", props.prevTarget)
   const callingRef = useRef<HTMLDivElement>(null);
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     console.log("handleKeyDown", e.key)

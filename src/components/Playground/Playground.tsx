@@ -24,6 +24,7 @@ const data = [
 export default function Playground() {
   const [open, setOpen] = useState(false)
   const [bonTalk, setBonTalk] = useState<BonTalk | null>(null)
+  const [callId, setCallId] = useState("");
 
   const handleOpenPanel = () => {
     if (bonTalk) {
@@ -77,35 +78,66 @@ export default function Playground() {
       }
     })
     setBonTalk(bonTalkInstance)
+   
+    // bonTalkInstance.onCallInitial(() => {
+    //   console.log("準備中");
+    // });
+    
+    // bonTalkInstance.onCallEstablishing(() => {
+    //   console.log("建立中");
+    // });
+    
+    // bonTalkInstance.onCallEstablished(() => {
+    //   console.log("已建立");
+    //   console.log(bonTalkInstance?.callId)
+    // });
+    
+    // bonTalkInstance.onCallTerminating(() => {
+    //   console.log("結束中");
+    // });
+    
+    // bonTalkInstance.onCallTerminated(() => {
+    //   console.log("已結束");
+    // });
     bonTalkInstance.init()
   }
+
+
 
   const handleInputChange = (name: string, value: string) => {
     localStorage.setItem(name, value)
   }
 
   useEffect(()=>{
-    console.log("useEffect 嘗試獲得 CallID")
-    console.log(bonTalk?.callId)
-    console.log(bonTalk?.callId)
-    console.log(bonTalk?.callId)
-    console.log(bonTalk?.callId)
-    console.log(bonTalk?.callId)
-    console.log(bonTalk?.callId)
+    if(bonTalk) {
+      bonTalk.onCallInitial(() => {
+        console.log("準備中");
+      });
+      
+      bonTalk.onCallEstablishing(() => {
+        console.log("建立中");
+      });
+      
+      bonTalk.onCallEstablished(() => {
+        console.log("已建立");
+        console.log(bonTalk.callId)
+        setCallId(bonTalk.callId)
+      });
+      
+      bonTalk.onCallTerminating(() => {
+        console.log("結束中");
+      });
+      
+      bonTalk.onCallTerminated(() => {
+        console.log("已結束");
+      });
+    }
+
   },[bonTalk])
 
   return (
     <Container>
       <Nav>
-        <button onClick={()=>{
-          console.log("嘗試獲得 CallID")
-          console.log(bonTalk?.callId)
-          console.log(bonTalk?.callId)
-          console.log(bonTalk?.callId)
-          console.log(bonTalk?.callId)
-          console.log(bonTalk?.callId)
-          console.log(bonTalk?.callId)
-        }}>CallId</button>
         <Title>SuperDesk CRM</Title>
         <div style={{ flex: 1 }} />
         <Button>Home</Button>
@@ -118,6 +150,8 @@ export default function Playground() {
         <Button onClick={() => setOpen((prev) => !prev)}>PHONE SETTINGS</Button>
       </Nav>
       <Body>
+        <h1>CallId : {callId}</h1>
+        <hr />
         {open && (
           <Settings>
             <Button onClick={() => setOpen(false)}> {"< BACK"}</Button>
