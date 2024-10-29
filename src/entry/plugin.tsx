@@ -234,6 +234,61 @@ export default class BonTalk {
     // 設置 zIndex
     this.rootElement.style.zIndex = `${config.zIndex || this.panelConfig?.zIndex}`;
   }
+  private onCallInitialCallback: (() => void) | null = null;
+  private onCallEstablishingCallback: (() => void) | null = null;
+  private onCallEstablishedCallback: (() => void) | null = null;
+  private onCallTerminatingCallback: (() => void) | null = null;
+  private onCallTerminatedCallback: (() => void) | null = null;
+
+  onCallInitial(callback: () => void) {
+    this.onCallInitialCallback = callback;
+  }
+
+  onCallEstablishing(callback: () => void) {
+    this.onCallEstablishingCallback = callback;
+  }
+
+  onCallEstablished(callback: () => void) {
+    this.onCallEstablishedCallback = callback;
+  }
+
+  onCallTerminating(callback: () => void) {
+    this.onCallTerminatingCallback = callback;
+  }
+
+  onCallTerminated(callback: () => void) {
+    this.onCallTerminatedCallback = callback;
+  }
+
+  private triggerOnCallInitial() {
+    if (this.onCallInitialCallback) {
+      this.onCallInitialCallback();
+    }
+  }
+
+  private triggerOnCallEstablishing() {
+    if (this.onCallEstablishingCallback) {
+      this.onCallEstablishingCallback();
+    }
+  }
+
+  private triggerOnCallEstablished() {
+    if (this.onCallEstablishedCallback) {
+      this.onCallEstablishedCallback();
+    }
+  }
+
+  private triggerOnCallTerminating() {
+    if (this.onCallTerminatingCallback) {
+      this.onCallTerminatingCallback();
+    }
+  }
+
+  private triggerOnCallTerminated() {
+    if (this.onCallTerminatedCallback) {
+      this.onCallTerminatedCallback();
+    }
+  }
 
   get userAgentInstance() {
     return this.userAgent
@@ -250,6 +305,10 @@ export default class BonTalk {
   get rootId() {
     return BonTalk.rootId
   }
+
+  get callId() {
+    return this.sessionManager.callId
+  } 
 
   get audioElement() {
     const element = document.getElementById(this.audioElementId)
@@ -322,16 +381,27 @@ export default class BonTalk {
     inviter.stateChange.addListener((state: SessionState) => {
       switch (state) {
         case SessionState.Initial:
+          this.triggerOnCallInitial();
+          // console.log("初始化")
           break
         case SessionState.Establishing:
+          this.triggerOnCallEstablishing();
+          // console.log("建立中")
           break
         case SessionState.Established:
           BonTalk.setupRemoteMedia(inviter, audioElement as HTMLMediaElement)
+          this.triggerOnCallEstablished();
+          // console.log("已建立")
           break
         case SessionState.Terminating:
+          this.triggerOnCallTerminating();
+          // console.log("結束中")
+          break
         case SessionState.Terminated:
           this.sessionManager.removeSession(as)
           BonTalk.cleanupMedia(audioElement as HTMLMediaElement)
+          this.triggerOnCallTerminated();
+          // console.log("已結束")
           break
         default:
           throw new Error("Unknown session state.")
@@ -695,6 +765,8 @@ class SessionManager {
    */
   private sessions: Map<SessionName, CustomSession> = new Map()
 
+  public callId: string = ""
+
   listeners: ((...argus: unknown[]) => unknown)[] = []
 
   constructor() { }
@@ -707,6 +779,8 @@ class SessionManager {
     const newSession = new CustomSession({ session, isMuted: false, isHold: false, time: 0, timerId: null })
     this.sessions.set(type, newSession)
     this.emitChange()
+
+    this.callId = session.request.callId
 
     newSession.timerId = window.setInterval(() => {
       try {

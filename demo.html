@@ -23,14 +23,10 @@
 
     const bonTalkBtn = document.getElementById("phone-btn")
     bonTalkBtn.addEventListener("click", () => {
-      console.log(bonTalk)
       if (!bonTalk) {
-        console.log("init")
         bonTalkInstance.init()
         bonTalk = bonTalkInstance
-         console.log(bonTalk)
       } else {
-        console.log("toggle")
         bonTalk.togglePanel()
       }
     })
