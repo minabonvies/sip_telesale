@@ -19,7 +19,6 @@ export default function KeyPad(props: KeyPadProps) {
       enterKey(key)
       toggleDTMF()
   }
-  console.log("inputKeys", inputKeys ? "true" : "false")
   const handleActionPress = (action: ActionButtonType) => {
     switch (action) {
       case "CALL":
