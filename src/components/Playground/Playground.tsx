@@ -4,7 +4,6 @@ import Phone from "../Icons/phone"
 import BonTalk from "@/entry/plugin"
 
 // const bonTalk = new BonTalk({
-//   buttonElementId: "_test", // for dev, no need to render button
 //   wsServer: "wss://demo.sip.telesale.org:7443/ws",
 //   domains: ["demo.sip.telesale.org"],
 //   username: "3003",
@@ -25,6 +24,7 @@ export default function Playground() {
   const [open, setOpen] = useState(false)
   const [bonTalk, setBonTalk] = useState<BonTalk | null>(null)
   const [callId, setCallId] = useState("");
+  const [sipState, setSipState] = useState("");
 
   const handleOpenPanel = () => {
     if (bonTalk) {
@@ -112,27 +112,31 @@ export default function Playground() {
     if(bonTalk) {
       bonTalk.onCallInitial(() => {
         console.log("準備中");
+        setSipState("Initial");
       });
       
       bonTalk.onCallEstablishing(() => {
         console.log("建立中");
+        setSipState("Establishing");
       });
       
       bonTalk.onCallEstablished(() => {
         console.log("已建立");
-        console.log(bonTalk.callId)
-        setCallId(bonTalk.callId)
+        setSipState("Established");
+        console.log(bonTalk.callId);
+        setCallId(bonTalk.callId);
       });
       
       bonTalk.onCallTerminating(() => {
         console.log("結束中");
+        setSipState("Terminating");
       });
       
       bonTalk.onCallTerminated(() => {
         console.log("已結束");
+        setSipState("Terminated");
       });
     }
-
   },[bonTalk])
 
   return (
@@ -150,37 +154,44 @@ export default function Playground() {
         <Button onClick={() => setOpen((prev) => !prev)}>PHONE SETTINGS</Button>
       </Nav>
       <Body>
-        <h1>CallId : {callId}</h1>
-        <hr />
         {open && (
-          <Settings>
-            <Button onClick={() => setOpen(false)}> {"< BACK"}</Button>
-            <input
-              placeholder="Username"
-              defaultValue={localStorage.getItem("Username") ?? ""}
-              onChange={(e) => handleInputChange("Username", e.target.value)}
-            />
-            <input
-              placeholder="Password"
-              defaultValue={localStorage.getItem("Password") ?? ""}
-              onChange={(e) => handleInputChange("Password", e.target.value)}
-            />
-            <input
-              placeholder="DisplayName"
-              defaultValue={localStorage.getItem("DisplayName") ?? ""}
-              onChange={(e) => handleInputChange("DisplayName", e.target.value)}
-            />
-            <input
-              placeholder="WebsocketServer"
-              defaultValue={localStorage.getItem("WebsocketServer") ?? ""}
-              onChange={(e) => handleInputChange("WebsocketServer", e.target.value)}
-            />
-            <input
-              placeholder="Domain"
-              defaultValue={localStorage.getItem("Domain") ?? ""}
-              onChange={(e) => handleInputChange("Domain", e.target.value)}
-            />
-          </Settings>
+          <PhoneSettings>
+            <CallData>
+              <div>
+                <h4>CallId : {callId}</h4>
+                <h4>sipState : {sipState}</h4>
+              </div>  
+            </CallData>
+            <Settings>
+              <Button onClick={() => setOpen(false)}> {"< BACK"}</Button>
+              <input
+                placeholder="Username"
+                defaultValue={localStorage.getItem("Username") ?? ""}
+                onChange={(e) => handleInputChange("Username", e.target.value)}
+              />
+              <input
+                placeholder="Password"
+                defaultValue={localStorage.getItem("Password") ?? ""}
+                onChange={(e) => handleInputChange("Password", e.target.value)}
+              />
+              <input
+                placeholder="DisplayName"
+                defaultValue={localStorage.getItem("DisplayName") ?? ""}
+                onChange={(e) => handleInputChange("DisplayName", e.target.value)}
+              />
+              <input
+                placeholder="WebsocketServer"
+                defaultValue={localStorage.getItem("WebsocketServer") ?? ""}
+                onChange={(e) => handleInputChange("WebsocketServer", e.target.value)}
+              />
+              <input
+                placeholder="Domain"
+                defaultValue={localStorage.getItem("Domain") ?? ""}
+                onChange={(e) => handleInputChange("Domain", e.target.value)}
+              />
+            </Settings>
+          </PhoneSettings>
+
         )}
         {!open && (
           <>
@@ -321,10 +332,24 @@ const Body = styled.div({
     "& th": {
       backgroundColor: "#efe0e0",
     },
-    "& tr:nth-child(even)": {
+    "& tr:nth-of-type(even)": {
       backgroundColor: "#fafafa",
     },
   },
+})
+
+const PhoneSettings = styled.div({
+  display: "flex"
+})
+
+const CallData = styled.div({
+  div: {
+  borderRadius: "16px",
+  backgroundColor: "#DCDCDC",
+  minWidth: "600px",
+  padding: "1px 16px"
+  }
+
 })
 
 const Settings = styled.div({
