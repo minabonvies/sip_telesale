@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import styled from "@emotion/styled"
 import Phone from "../Icons/phone"
 import BonTalk from "@/entry/plugin"
@@ -84,9 +84,28 @@ export default function Playground() {
     localStorage.setItem(name, value)
   }
 
+  useEffect(()=>{
+    console.log("useEffect 嘗試獲得 CallID")
+    console.log(bonTalk?.callId)
+    console.log(bonTalk?.callId)
+    console.log(bonTalk?.callId)
+    console.log(bonTalk?.callId)
+    console.log(bonTalk?.callId)
+    console.log(bonTalk?.callId)
+  },[bonTalk])
+
   return (
     <Container>
       <Nav>
+        <button onClick={()=>{
+          console.log("嘗試獲得 CallID")
+          console.log(bonTalk?.callId)
+          console.log(bonTalk?.callId)
+          console.log(bonTalk?.callId)
+          console.log(bonTalk?.callId)
+          console.log(bonTalk?.callId)
+          console.log(bonTalk?.callId)
+        }}>CallId</button>
         <Title>SuperDesk CRM</Title>
         <div style={{ flex: 1 }} />
         <Button>Home</Button>

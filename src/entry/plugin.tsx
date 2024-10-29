@@ -251,6 +251,10 @@ export default class BonTalk {
     return BonTalk.rootId
   }
 
+  get callId() {
+    return this.sessionManager.callId
+  } 
+
   get audioElement() {
     const element = document.getElementById(this.audioElementId)
     if (!element) {
@@ -695,6 +699,8 @@ class SessionManager {
    */
   private sessions: Map<SessionName, CustomSession> = new Map()
 
+  public callId: string = ""
+
   listeners: ((...argus: unknown[]) => unknown)[] = []
 
   constructor() { }
@@ -707,6 +713,8 @@ class SessionManager {
     const newSession = new CustomSession({ session, isMuted: false, isHold: false, time: 0, timerId: null })
     this.sessions.set(type, newSession)
     this.emitChange()
+
+    this.callId = session.request.callId
 
     newSession.timerId = window.setInterval(() => {
       try {
