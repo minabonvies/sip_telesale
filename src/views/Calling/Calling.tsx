@@ -93,7 +93,6 @@ export default function Calling(props: CallingProps) {
     if (actionPadType) {
       props.onDTMFClick(key)
     }
-
     enterKey(key)
   }
 
@@ -119,15 +118,22 @@ export default function Calling(props: CallingProps) {
   }
 
   const callingRef = useRef<HTMLDivElement>(null);
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    console.log("handleKeyDown", e.key)
-    if (e.key === "Enter") {
-      props.onHangClick()
+
+  const handleFocusKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (/^[0-9*#]$/.test(e.key)) {
+      handleKeyPress(e.key);
+    } else if (e.key === "Enter") {
+      handleActionPress("CALL")
+    } else if (e.key === "Backspace") {
+      handleActionPress("DELETE")
+    } else {
+      throw new Error("Invalid key")
     }
   }
+
   useEffect(() => {
     callingRef.current?.focus();
-  }, []);
+  }, [openKeyPad]);
   
   return (
     <>
@@ -138,7 +144,12 @@ export default function Calling(props: CallingProps) {
         showCancelButton={openKeyPad}
         onCancelClick={handleCancelClick}
       />
-      <ViewContainer id="calling" ref={callingRef} tabIndex={0} onKeyDown={handleKeyDown}>
+      <ViewContainer 
+        id="calling" 
+        ref={callingRef} 
+        tabIndex={1} 
+        onKeyDown={(e) => handleFocusKeyDown(e)}
+      >
         {/* 通話畫面 */}
         {!openKeyPad ? (
           <>

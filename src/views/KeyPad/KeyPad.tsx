@@ -51,11 +51,6 @@ export default function KeyPad(props: KeyPadProps) {
       <Header />
       <ViewContainer
         id="key-pad"
-        onClick={(e) => {
-          if (e.target instanceof HTMLElement) {
-            e.target.focus();
-          }
-        }}
         tabIndex={1} 
         onKeyDown={(e) => handleFocusKeyDown(e)}
       >
