@@ -364,7 +364,7 @@ export default class BonTalk {
       sessionDescriptionHandlerOptions: {
         constraints: {
           audio: true,
-          video: false,
+          video: true,
         },
       },
     }
@@ -419,7 +419,7 @@ export default class BonTalk {
       sessionDescriptionHandlerOptions: {
         constraints: {
           audio: true,
-          video: false,
+          video: true,
         },
       },
     }

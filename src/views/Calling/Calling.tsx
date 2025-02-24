@@ -8,6 +8,7 @@ import { useBonTalk } from "@/Provider/BonTalkProvider"
 import NumberPad from "@/components/NumberPad"
 import Header from "@/components/Header"
 import useInputKeys from "@/hooks/useInputKeys"
+import { useView } from "@/Provider/ViewProvider"
 
 type CallingProps = {
   currentSessionName: SessionName | ""
@@ -27,6 +28,8 @@ type CallingProps = {
 
 export default function Calling(props: CallingProps) {
   const bonTalk = useBonTalk()!
+
+  const { view, setView, currentCallingTarget, setCurrentCallingTarget } = useView()
 
   const currentSession = useSyncExternalStore(bonTalk.sessionManager.subscribe.bind(bonTalk.sessionManager), () =>
     bonTalk.sessionManager.getSession(props.currentSessionName)
@@ -117,6 +120,10 @@ export default function Calling(props: CallingProps) {
     setOpenKeyPad(false)
   }
 
+  const handleVideoClick = () => {
+    setView("CALL_VIDEO")
+  }
+
   const callingRef = useRef<HTMLDivElement>(null);
 
   const handleFocusKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -165,6 +172,7 @@ export default function Calling(props: CallingProps) {
               onKeyPadClick={handleKeyPadClick}
               onSwitchClick={handleSwitchClick}
               onPreForwardClick={handlePreForwardClick}
+              onVideoClick={handleVideoClick}
               disabledTransfer={props.currentSessionName === "attendedRefer"}
             />
             <div style={{ flex: 1 }} />

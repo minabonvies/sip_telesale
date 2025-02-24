@@ -8,6 +8,7 @@ import useUA from "@/hooks/useUA"
 import KeyPad from "@/views/KeyPad"
 import IncomingCall from "@/views/IncomingCall"
 import Calling from "@/views/Calling"
+import Video from "@/views/Video"
 import { SessionName } from "@/entry/plugin"
 import { useAudio } from "@/Provider/AudioProvider"
 
@@ -132,6 +133,9 @@ export default function App() {
             onPreForwardSendCall={handlePreForwardSendCall}
             onDTMFClick={handleDTMFClick}
           />
+        ) : null}
+        {view === "CALL_VIDEO" ? ( 
+          <Video />
         ) : null}
         <ContentFooter>
           <Logo />

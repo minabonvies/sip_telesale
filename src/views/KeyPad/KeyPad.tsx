@@ -7,6 +7,7 @@ import ActionPad, { type ActionButtonType } from "@/components/ActionPad"
 // import ContentHeader from "@/components/ContentHeader"
 import Header from "@/components/Header"
 import { useAudio } from "@/Provider/AudioProvider"
+import { useView } from "@/Provider/ViewProvider"
 
 type KeyPadProps = {
   onCall: (numbers: string) => void
@@ -15,11 +16,13 @@ type KeyPadProps = {
 export default function KeyPad(props: KeyPadProps) {
   const { inputKeys, enterKey, deleteKey } = useInputKeys()
   const { toggleDTMF } = useAudio()
+  const { setView } = useView()
   const handleKeyPress = (key: string) => {
       enterKey(key)
       toggleDTMF()
   }
   const handleActionPress = (action: ActionButtonType) => {
+    console.log("action", action)
     switch (action) {
       case "CALL":
         if (inputKeys) {
@@ -28,6 +31,9 @@ export default function KeyPad(props: KeyPadProps) {
         break
       case "DELETE":
         deleteKey()
+        break
+      case "CALL_VIDEO":
+        setView("CALL_VIDEO")
         break
       default:
         throw new Error("Invalid action")

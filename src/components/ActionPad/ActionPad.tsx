@@ -21,7 +21,7 @@ export default function ActionPad(props: Props) {
     <KeyPadContainer>
       {actionType === "DEFAULT" && (
         <>
-          <KeyPadButton color="success" text={<Video />} disabled onClick={() => props.onButtonClick?.("CALL_VIDEO")} />
+          <KeyPadButton color="success" text={<Video />} onClick={() => props.onButtonClick?.("CALL_VIDEO")} />
           <KeyPadButton color="success" text={<Phone />} onClick={() => props.onButtonClick?.("CALL")} />
           <KeyPadButton color="secondary" text={<Delete />} onClick={() => props.onButtonClick?.("DELETE")} />
         </>

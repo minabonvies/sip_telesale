@@ -36,7 +36,7 @@ export default function Menu(props: Props) {
         <KeyPad />
         <MenuText>按鍵</MenuText>
       </MenuButton>
-      <MenuButton disabled onClick={onVideoClick}>
+      <MenuButton onClick={onVideoClick}>
         <VideoOutlined />
         <MenuText>視訊</MenuText>
       </MenuButton>
