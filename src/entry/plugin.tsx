@@ -521,6 +521,33 @@ export default class BonTalk {
     // MUTE HOLD NEED TO STATE
   }
 
+  /**
+   * Toggles the local video stream on or off.
+   * @param enable - If true, enables the video; if false, disables the video.
+   * @param sessionName - The name of the session to toggle video for.
+   */
+  toggleVideo(enable: boolean, sessionName: SessionName) {
+    const customSession = this.sessionManager.getSession(sessionName);
+    const currentSession = customSession?.session;
+    if (!currentSession) {
+      return;
+    }
+
+    // @ts-expect-error sip.js types are not up to date
+    currentSession.sessionDescriptionHandler!.peerConnection.getLocalStreams().forEach((stream) => {
+      // @ts-expect-error sip.js types are not up to date
+      stream.getVideoTracks().forEach((track) => {
+        track.enabled = enable;
+      });
+    });
+
+    if (enable) {
+      this.sessionManager.enableVideoSession(sessionName);
+    } else {
+      this.sessionManager.disableVideoSession(sessionName);
+    }
+  }
+
   async sendDTMF(tone: string, sessionName: SessionName) {
     const currentSession = this.sessionManager.getSession(sessionName)
     if (!currentSession?.session) {
@@ -708,6 +735,7 @@ class CustomSession {
   isHold: boolean = false
   time: number = 0
   timerId: number | null = null
+  isVideoEnabled: boolean = true;
 
   get name() {
     if (!this.session) {
@@ -731,18 +759,21 @@ class CustomSession {
     isHold,
     time,
     timerId,
+    isVideoEnabled = true
   }: {
     session: Inviter | Invitation
     isMuted: boolean
     isHold: boolean
     time: number
     timerId: number | null
+    isVideoEnabled?: boolean
   }) {
     this.session = session
     this.isMuted = isMuted
     this.isHold = isHold
     this.time = time
     this.timerId = timerId
+    this.isVideoEnabled = isVideoEnabled;
   }
 
   copy() {
@@ -752,6 +783,7 @@ class CustomSession {
       isHold: this.isHold,
       time: this.time,
       timerId: this.timerId,
+      isVideoEnabled: this.isVideoEnabled
     })
   }
 }
@@ -867,6 +899,31 @@ class SessionManager {
     this.listeners.forEach((listener) => {
       listener()
     })
+  }
+
+  enableVideoSession<T extends SessionName>(type: T) {
+    const session = this.sessions.get(type);
+    if (session) {
+      session.isVideoEnabled = true;
+      const newSession = session.copy();
+      this.sessions.set(type, newSession);
+      this.emitChange();
+    }
+  }
+
+  disableVideoSession<T extends SessionName>(type: T) {
+    const session = this.sessions.get(type);
+    if (session) {
+      session.isVideoEnabled = false;
+      const newSession = session.copy();
+      this.sessions.set(type, newSession);
+      this.emitChange();
+    }
+  }
+
+  isSessionVideoEnabled<T extends SessionName>(type: T) {
+    const session = this.sessions.get(type);
+    return session ? session.isVideoEnabled : false;
   }
 }
 

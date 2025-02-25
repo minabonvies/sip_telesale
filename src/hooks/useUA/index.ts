@@ -119,6 +119,11 @@ export default function useUA() {
     bonTalk.toggleMicrophone(mute, target)
   }
 
+  const setVideo = (video: boolean, target: SessionName) => {
+    if (!bonTalk) return
+    bonTalk.toggleVideo(video, target)
+  }
+
   const sendDTMF = async (tone: string, to: SessionName) => {
     if (!bonTalk) return
     try {
@@ -162,7 +167,7 @@ export default function useUA() {
       console.error(error)
       alert("Failed to attended transfer - transfer.\n" + error)
     }
-  }
+  } 
 
   return {
     receivedInvitation,
@@ -173,6 +178,7 @@ export default function useUA() {
     setHold,
     sendDTMF,
     setMute,
+    setVideo,
     blindTransfer,
     preAttendedTransfer,
     attendedTransfer,
