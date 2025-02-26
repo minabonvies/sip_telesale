@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import styled from "@emotion/styled"
 import { useBonTalk } from "@/Provider/BonTalkProvider"
 import { useView } from "@/Provider/ViewProvider"
@@ -12,9 +12,20 @@ export default function Video(props: CallingProps) {
   const { currentCallingTarget } = useView()
 
   const currentSession = bonTalk.sessionManager.getSession(currentCallingTarget)
+  const [isVideo, setIsVideo] = useState(true);
 
   const handleVideoClick = () => {
-    props.onVideoClick()
+    props.onVideoClick();
+
+    setIsVideo((prev) => {
+      if (prev) {
+        removeLocalVideo();
+      } else {
+        setupLocalVideo();
+      }
+
+      return !prev;
+    })
   }
 
   const setupLocalVideo = () => {
@@ -68,14 +79,14 @@ export default function Video(props: CallingProps) {
   }
 
   useEffect(() => {
-    // setupLocalVideo();
-    // setupRemoteVideo();
+    setupLocalVideo();
+    setupRemoteVideo();
 
     return () => {
-      // removeLocalVideo();
-      // removeRemoteVideo();
+      removeLocalVideo();
+      removeRemoteVideo();
     };
-  }, [currentSession]);
+  }, []);
 
   return (
     <>
@@ -83,8 +94,10 @@ export default function Video(props: CallingProps) {
         {/* 視訊畫面 */}
         <h2>視訊畫面</h2>
         <video id="localVideo" width='100%' autoPlay playsInline muted></video>
-        <video id="remoteVideo" width='100%' autoPlay playsInline></video>
-        <button onClick={handleVideoClick}>開關視訊</button>
+        <video id="remoteVideo" width='100%' autoPlay playsInline muted></video>
+        <button onClick={handleVideoClick}>
+          {isVideo ? "關閉" : "開啟"}視訊
+        </button>
       </VideoContainer>
     </>
   )
