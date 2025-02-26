@@ -8,7 +8,7 @@ type CallingProps = {
   onVideoClick: () => void
   onSetupLocalVideo: () => void
   onRemoveLocalVideo: () => void
-  onSetupRemoteVideo: (currentCallingTarget: SessionName | "") => void
+  onSetupRemoteVideo: () => void
   onRemoveRemoteVideo: () => void
 }
 
@@ -47,7 +47,7 @@ export default function Video(props: CallingProps) {
 
   useEffect(() => {
     props.onSetupLocalVideo();
-    props.onSetupRemoteVideo(currentCallingTarget);
+    props.onSetupRemoteVideo();
 
     return () => {
       props.onRemoveLocalVideo();

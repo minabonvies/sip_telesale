@@ -155,7 +155,11 @@ export default function App() {
             onVideoClick={handleVideoClick}
             onSetupLocalVideo={setupLocalVideo}
             onRemoveLocalVideo={removeLocalVideo}
-            onSetupRemoteVideo={setupRemoteVideo}
+            onSetupRemoteVideo={() => {
+              if (currentCallingTarget) {
+                setupRemoteVideo(currentCallingTarget as SessionName)
+              }
+            }}
             onRemoveRemoteVideo={removeRemoteVideo}
           />
         ) : null}
