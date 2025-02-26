@@ -167,7 +167,28 @@ export default function useUA() {
       console.error(error)
       alert("Failed to attended transfer - transfer.\n" + error)
     }
-  } 
+  }
+
+  const setupLocalVideo = async () => {
+    if (!bonTalk) return
+    return await bonTalk.setupLocalVideo()
+  }
+
+  const removeLocalVideo = () => {
+    if (!bonTalk) return
+    return bonTalk.removeLocalVideo()
+  }
+
+  const setupRemoteVideo = (session: SessionName) => {
+    if (!bonTalk) return
+    return bonTalk.setupRemoteVideo(session)
+  }
+
+  const removeRemoteVideo = () => {
+    if (!bonTalk) return
+    return bonTalk.removeRemoteVideo()
+  }
+
 
   return {
     receivedInvitation,
@@ -182,5 +203,9 @@ export default function useUA() {
     blindTransfer,
     preAttendedTransfer,
     attendedTransfer,
+    setupLocalVideo,
+    removeLocalVideo,
+    setupRemoteVideo,
+    removeRemoteVideo,
   }
 }

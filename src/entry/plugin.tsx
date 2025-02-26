@@ -386,8 +386,6 @@ export default class BonTalk {
     }
 
     const audioElement = document.getElementById(this.audioElementId)
-    // const localVideoElement = document.getElementById(this.localVideoElementId) as HTMLVideoElement;
-    // const remoteVideoElement = document.getElementById(this.remoteVideoElementId) as HTMLVideoElement;
 
     if (!audioElement) {
       throw new BonTalkError(`[bonTalk] audioElement with id ${this.audioElementId} not found`)
@@ -420,8 +418,6 @@ export default class BonTalk {
           console.warn("已掛斷 Terminated")
           this.sessionManager.removeSession(as)
           BonTalk.cleanupMedia(audioElement as HTMLMediaElement)
-          // BonTalk.cleanupMedia(localVideoElement as HTMLMediaElement)
-          // BonTalk.cleanupMedia(remoteVideoElement as HTMLMediaElement)
           this.triggerOnCallTerminated();
           // console.log("已結束")
           break
@@ -514,6 +510,58 @@ export default class BonTalk {
       } else {
         this.sessionManager.unHoldSession(sessionName)
       }
+    }
+  }
+
+  async setupLocalVideo() {
+    try {
+     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+     const localVideoElement = document.getElementById(this.localVideoElementId) as HTMLVideoElement;
+     if (localVideoElement) {
+        localVideoElement.srcObject = stream;
+      }
+    } catch (error) {
+      console.error("Error accessing local media devices.", error);
+    }
+  }
+
+  removeLocalVideo() {
+    const localVideoElement = document.getElementById(this.localVideoElementId) as HTMLVideoElement;
+    if (localVideoElement && localVideoElement.srcObject) {
+      const stream = localVideoElement.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      localVideoElement.srcObject = null;
+    }
+  }
+
+  setupRemoteVideo(sessionName: SessionName) {
+    const customSession = this.sessionManager.getSession(sessionName);
+    const currentSession = customSession?.session;
+    if (!currentSession || !currentSession.sessionDescriptionHandler) return;
+
+    const remoteStream = new MediaStream();
+    const peerConnection = (currentSession.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
+    peerConnection.getReceivers().forEach((receiver: { track: MediaStreamTrack; }) => {
+      if (receiver.track) {
+        remoteStream.addTrack(receiver.track);
+      }
+    });
+
+    console.log(remoteStream);
+    const hasVideo = remoteStream.getVideoTracks().length > 0;
+    console.log("包含視訊:", hasVideo);
+
+    const remoteVideoElement = document.getElementById(this.remoteVideoElementId) as HTMLVideoElement;
+    console.log(this.remoteVideoElementId,remoteVideoElement,remoteStream);
+    if (remoteVideoElement) {
+      remoteVideoElement.srcObject = remoteStream;
+    }
+  }
+
+  removeRemoteVideo() {
+    const remoteVideoElement = document.getElementById(this.remoteVideoElementId) as HTMLVideoElement;
+    if (remoteVideoElement) {
+      remoteVideoElement.srcObject = null;
     }
   }
 

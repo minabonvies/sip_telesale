@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import styled from "@emotion/styled"
 import { SessionState } from "sip.js"
 
@@ -27,6 +27,10 @@ export default function App() {
     preAttendedTransfer,
     attendedTransfer,
     sendDTMF,
+    setupLocalVideo,
+    removeLocalVideo,
+    setupRemoteVideo,
+    removeRemoteVideo,
   } = useUA()
   const [tempCurrentCallingTarget, setTempCurrentCallingTarget] = useState<SessionName | "">("");
 
@@ -125,7 +129,12 @@ export default function App() {
   return (
     <AppContainer>
       <Content>
-        {view === "KEY_PAD" ? <KeyPad onCall={handleCall} /> : null}
+        {view === "KEY_PAD" ? 
+          <>
+            <KeyPad onCall={handleCall} />
+            <button onClick={() => handleCall('3004')}>打給 3004</button>
+          </>
+        : null}
         {view === "RECEIVED_CALL" ? <IncomingCall displayTitle={callTargetTitle} onAccept={handleAccept} onReject={handleReject} /> : null}
         {view === "IN_CALL" ? (
           <Calling
@@ -142,10 +151,15 @@ export default function App() {
           />
         ) : null}
         {view === "CALL_VIDEO" ? ( 
-          <Video onVideoClick={handleVideoClick} />
+          <Video
+            onVideoClick={handleVideoClick}
+            onSetupLocalVideo={setupLocalVideo}
+            onRemoveLocalVideo={removeLocalVideo}
+            onSetupRemoteVideo={setupRemoteVideo}
+            onRemoveRemoteVideo={removeRemoteVideo}
+          />
         ) : null}
         <ContentFooter>
-          <button onClick={() => handleCall('3004')}>打給 3004</button>
           <Logo />
         </ContentFooter>
       </Content>

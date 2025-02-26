@@ -2,9 +2,14 @@ import { useEffect, useState } from "react"
 import styled from "@emotion/styled"
 import { useBonTalk } from "@/Provider/BonTalkProvider"
 import { useView } from "@/Provider/ViewProvider"
+import { SessionName } from "@/entry/plugin"
 
 type CallingProps = {
   onVideoClick: () => void
+  onSetupLocalVideo: () => void
+  onRemoveLocalVideo: () => void
+  onSetupRemoteVideo: (currentCallingTarget: SessionName | "") => void
+  onRemoveRemoteVideo: () => void
 }
 
 export default function Video(props: CallingProps) {
@@ -19,9 +24,9 @@ export default function Video(props: CallingProps) {
 
     setIsVideo((prev) => {
       if (prev) {
-        removeLocalVideo();
+        props.onRemoveLocalVideo();
       } else {
-        setupLocalVideo();
+        props.onSetupLocalVideo();
       }
 
       return !prev;
@@ -35,68 +40,18 @@ export default function Video(props: CallingProps) {
   const handleHangupClick = async () => {
     if (!currentCallingTarget) return
     setCurrentCallingTarget("")
-    removeLocalVideo();
-    removeRemoteVideo();
+    props.onRemoveLocalVideo();
+    props.onRemoveRemoteVideo();
     await bonTalk.hangupCall(currentCallingTarget)
   }
 
-  const setupLocalVideo = () => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        const localVideoElement = document.getElementById(bonTalk!.localVideoElementId) as HTMLVideoElement;
-        if (localVideoElement) {
-          localVideoElement.srcObject = stream;
-        }
-      })
-      .catch((error) => {
-        console.error("Error accessing local media devices.", error);
-      });
-  }
-
-  const removeLocalVideo = () => {
-    const localVideoElement = document.getElementById(bonTalk!.localVideoElementId) as HTMLVideoElement;
-    if (localVideoElement && localVideoElement.srcObject) {
-      const stream = localVideoElement.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      localVideoElement.srcObject = null;
-    }
-  }
-
-  const setupRemoteVideo = () => {
-    if (!currentSession || !currentSession.session?.sessionDescriptionHandler) return;
-
-    const remoteStream = new MediaStream();
-    const peerConnection = (currentSession.session.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
-    peerConnection.getReceivers().forEach((receiver: { track: MediaStreamTrack; }) => {
-      if (receiver.track) {
-        remoteStream.addTrack(receiver.track);
-      }
-    });
-
-    console.log(remoteStream);
-    const hasVideo = remoteStream.getVideoTracks().length > 0;
-    console.log("包含視訊:", hasVideo);
-
-    const remoteVideoElement = document.getElementById(bonTalk!.remoteVideoElementId) as HTMLVideoElement;
-    if (remoteVideoElement) {
-      remoteVideoElement.srcObject = remoteStream;
-    }
-  }
-
-  const removeRemoteVideo = () => {
-    const remoteVideoElement = document.getElementById(bonTalk!.remoteVideoElementId) as HTMLVideoElement;
-    if (remoteVideoElement) {
-      remoteVideoElement.srcObject = null;
-    }
-  }
-
   useEffect(() => {
-    setupLocalVideo();
-    setupRemoteVideo();
+    props.onSetupLocalVideo();
+    props.onSetupRemoteVideo(currentCallingTarget);
 
     return () => {
-      removeLocalVideo();
-      removeRemoteVideo();
+      props.onRemoveLocalVideo();
+      props.onRemoveRemoteVideo();
     };
   }, []);
 
@@ -107,7 +62,7 @@ export default function Video(props: CallingProps) {
         <CallingTargetTitle>視訊畫面</CallingTargetTitle>
         <div style={{ height: "24px" }} />
         <video id={bonTalk!.localVideoElementId} width='100%' autoPlay playsInline muted></video>
-        {/* <video id={bonTalk!.remoteVideoElementId} width='100%' autoPlay playsInline muted></video> */}
+        <video id={bonTalk!.remoteVideoElementId} width='100%' autoPlay playsInline muted></video>
         <button onClick={handleVideoClick}>
           {isVideo ? "關閉" : "開啟"}視訊
         </button>
