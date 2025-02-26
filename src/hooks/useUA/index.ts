@@ -119,9 +119,9 @@ export default function useUA() {
     bonTalk.toggleMicrophone(mute, target)
   }
 
-  const setVideo = (video: boolean, target: SessionName) => {
+  const setVideoTransport = (videoSwitch: boolean, target: SessionName) => {
     if (!bonTalk) return
-    bonTalk.toggleVideo(video, target)
+    bonTalk.toggleVideoTransport(videoSwitch, target)
   }
 
   const sendDTMF = async (tone: string, to: SessionName) => {
@@ -178,7 +178,7 @@ export default function useUA() {
     setHold,
     sendDTMF,
     setMute,
-    setVideo,
+    setVideoTransport,
     blindTransfer,
     preAttendedTransfer,
     attendedTransfer,

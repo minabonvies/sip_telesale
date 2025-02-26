@@ -18,35 +18,35 @@ export default function Video(props: CallingProps) {
   }
 
   useEffect(() => {
-    // if (!currentSession) return;
+    if (!currentSession) return;
   
-    // navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-    //   .then((stream) => {
-    //     const localVideoElement = document.getElementById('localVideo') as HTMLVideoElement;
-    //     if (localVideoElement) {
-    //       localVideoElement.srcObject = stream;
-    //     }
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then((stream) => {
+        const localVideoElement = document.getElementById('localVideo') as HTMLVideoElement;
+        if (localVideoElement) {
+          localVideoElement.srcObject = stream;
+        }
   
-    //     const remoteStream = new MediaStream();
-    //     if (currentSession.session?.sessionDescriptionHandler) {
-    //       const peerConnection = (currentSession.session.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
-    //       peerConnection.getReceivers().forEach((receiver: { track: MediaStreamTrack; }) => {
-    //         if (receiver.track) {
-    //           remoteStream.addTrack(receiver.track);
-    //         }
-    //       });
-    //       console.log(remoteStream)
-    //       const hasVideo = remoteStream.getVideoTracks().length > 0;
-    //       console.log("包含視訊:", hasVideo);
-    //       const remoteVideoElement = document.getElementById('remoteVideo') as HTMLVideoElement;
-    //       if (remoteVideoElement) {
-    //         remoteVideoElement.srcObject = remoteStream;
-    //       }
-    //     }
-    //   })
-    //   .catch((error) => {
-    //     console.error("Error accessing media devices.", error);
-    //   });
+        const remoteStream = new MediaStream();
+        if (currentSession.session?.sessionDescriptionHandler) {
+          const peerConnection = (currentSession.session.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
+          peerConnection.getReceivers().forEach((receiver: { track: MediaStreamTrack; }) => {
+            if (receiver.track) {
+              remoteStream.addTrack(receiver.track);
+            }
+          });
+          console.log(remoteStream)
+          const hasVideo = remoteStream.getVideoTracks().length > 0;
+          console.log("包含視訊:", hasVideo);
+          const remoteVideoElement = document.getElementById('remoteVideo') as HTMLVideoElement;
+          if (remoteVideoElement) {
+            remoteVideoElement.srcObject = remoteStream;
+          }
+        }
+      })
+      .catch((error) => {
+        console.error("Error accessing media devices.", error);
+      });
   }, [currentSession]);
 
   return (

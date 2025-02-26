@@ -526,7 +526,7 @@ export default class BonTalk {
    * @param enable - If true, enables the video; if false, disables the video.
    * @param sessionName - The name of the session to toggle video for.
    */
-  toggleVideo(enable: boolean, sessionName: SessionName) {
+  toggleVideoTransport(enable: boolean, sessionName: SessionName) {
     const customSession = this.sessionManager.getSession(sessionName);
     const currentSession = customSession?.session;
     if (!currentSession) {

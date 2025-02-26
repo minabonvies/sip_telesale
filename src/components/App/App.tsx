@@ -21,7 +21,7 @@ export default function App() {
     answerCall,
     rejectCall,
     setMute,
-    setVideo,
+    setVideoTransport,
     setHold,
     blindTransfer,
     preAttendedTransfer,
@@ -80,7 +80,7 @@ export default function App() {
   const handleVideoClick = () => {
     if (!currentCallingTarget) return
     const currentSession = bonTalk.sessionManager.getSession(currentCallingTarget)
-    setVideo(!currentSession?.isVideoEnabled, currentCallingTarget)
+    setVideoTransport(!currentSession?.isVideoEnabled, currentCallingTarget)
   }
 
   const handleHoldClick = () => {
