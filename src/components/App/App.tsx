@@ -145,6 +145,7 @@ export default function App() {
           <Video onVideoClick={handleVideoClick} />
         ) : null}
         <ContentFooter>
+          <button onClick={() => handleCall('3004')}>打給 3004</button>
           <Logo />
         </ContentFooter>
       </Content>

@@ -9,7 +9,7 @@ type CallingProps = {
 
 export default function Video(props: CallingProps) {
   const bonTalk = useBonTalk()!
-  const { currentCallingTarget } = useView()
+  const { view, setView, currentCallingTarget, setCurrentCallingTarget } = useView()
 
   const currentSession = bonTalk.sessionManager.getSession(currentCallingTarget)
   const [isVideo, setIsVideo] = useState(true);
@@ -28,10 +28,22 @@ export default function Video(props: CallingProps) {
     })
   }
 
+  const handleToInCallPad = async () => {
+    setView("IN_CALL")
+  }
+
+  const handleHangupClick = async () => {
+    if (!currentCallingTarget) return
+    setCurrentCallingTarget("")
+    removeLocalVideo();
+    removeRemoteVideo();
+    await bonTalk.hangupCall(currentCallingTarget)
+  }
+
   const setupLocalVideo = () => {
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then((stream) => {
-        const localVideoElement = document.getElementById('localVideo') as HTMLVideoElement;
+        const localVideoElement = document.getElementById(bonTalk!.localVideoElementId) as HTMLVideoElement;
         if (localVideoElement) {
           localVideoElement.srcObject = stream;
         }
@@ -42,7 +54,7 @@ export default function Video(props: CallingProps) {
   }
 
   const removeLocalVideo = () => {
-    const localVideoElement = document.getElementById('localVideo') as HTMLVideoElement;
+    const localVideoElement = document.getElementById(bonTalk!.localVideoElementId) as HTMLVideoElement;
     if (localVideoElement && localVideoElement.srcObject) {
       const stream = localVideoElement.srcObject as MediaStream;
       stream.getTracks().forEach(track => track.stop());
@@ -65,14 +77,14 @@ export default function Video(props: CallingProps) {
     const hasVideo = remoteStream.getVideoTracks().length > 0;
     console.log("包含視訊:", hasVideo);
 
-    const remoteVideoElement = document.getElementById('remoteVideo') as HTMLVideoElement;
+    const remoteVideoElement = document.getElementById(bonTalk!.remoteVideoElementId) as HTMLVideoElement;
     if (remoteVideoElement) {
       remoteVideoElement.srcObject = remoteStream;
     }
   }
 
   const removeRemoteVideo = () => {
-    const remoteVideoElement = document.getElementById('remoteVideo') as HTMLVideoElement;
+    const remoteVideoElement = document.getElementById(bonTalk!.remoteVideoElementId) as HTMLVideoElement;
     if (remoteVideoElement) {
       remoteVideoElement.srcObject = null;
     }
@@ -92,16 +104,26 @@ export default function Video(props: CallingProps) {
     <>
       <VideoContainer>
         {/* 視訊畫面 */}
-        <h2>視訊畫面</h2>
-        <video id="localVideo" width='100%' autoPlay playsInline muted></video>
-        <video id="remoteVideo" width='100%' autoPlay playsInline muted></video>
+        <CallingTargetTitle>視訊畫面</CallingTargetTitle>
+        <div style={{ height: "24px" }} />
+        <video id={bonTalk!.localVideoElementId} width='100%' autoPlay playsInline muted></video>
+        {/* <video id={bonTalk!.remoteVideoElementId} width='100%' autoPlay playsInline muted></video> */}
         <button onClick={handleVideoClick}>
           {isVideo ? "關閉" : "開啟"}視訊
         </button>
+        <button onClick={handleToInCallPad}>回到通話頁面</button>
+        <button onClick={handleHangupClick}>掛斷</button>
       </VideoContainer>
     </>
   )
 }
+
+const CallingTargetTitle = styled("div")((props) => ({
+  ...props.theme.typography.h1,
+  color: props.theme.colors.text.primary,
+  height: "32px",
+}))
+
 
 const VideoContainer = styled.div({
   display: "flex",

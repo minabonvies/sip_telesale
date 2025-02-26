@@ -62,6 +62,14 @@ export default class BonTalk {
     return "_bon_sip_phone_audio"
   }
 
+  static get localVideoElementId() {
+    return "_bon_sip_phone_local_video"
+  }
+
+  static get remoteVideoElementId() {
+    return "_bon_sip_phone_remote_video"
+  }
+
   static get rootId() {
     return "_bon_sip_phone_root"
   }
@@ -302,6 +310,14 @@ export default class BonTalk {
     return BonTalk.audioElementId
   }
 
+  get localVideoElementId() {
+    return BonTalk.localVideoElementId
+  }
+
+  get remoteVideoElementId() {
+    return BonTalk.remoteVideoElementId
+  }
+
   get rootId() {
     return BonTalk.rootId
   }
@@ -370,6 +386,9 @@ export default class BonTalk {
     }
 
     const audioElement = document.getElementById(this.audioElementId)
+    // const localVideoElement = document.getElementById(this.localVideoElementId) as HTMLVideoElement;
+    // const remoteVideoElement = document.getElementById(this.remoteVideoElementId) as HTMLVideoElement;
+
     if (!audioElement) {
       throw new BonTalkError(`[bonTalk] audioElement with id ${this.audioElementId} not found`)
     }
@@ -398,8 +417,11 @@ export default class BonTalk {
           // console.log("結束中")
           break
         case SessionState.Terminated:
+          console.warn("已掛斷 Terminated")
           this.sessionManager.removeSession(as)
           BonTalk.cleanupMedia(audioElement as HTMLMediaElement)
+          // BonTalk.cleanupMedia(localVideoElement as HTMLMediaElement)
+          // BonTalk.cleanupMedia(remoteVideoElement as HTMLMediaElement)
           this.triggerOnCallTerminated();
           // console.log("已結束")
           break
