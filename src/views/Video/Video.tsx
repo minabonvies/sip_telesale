@@ -15,6 +15,7 @@ type CallingProps = {
 }
 
 export default function Video(props: CallingProps) {
+  console.log("Video 組件")
   const bonTalk = useBonTalk()!
   const { view, setView, currentCallingTarget, setCurrentCallingTarget } = useView()
 
@@ -65,9 +66,13 @@ export default function Video(props: CallingProps) {
     }
   }
 
+  function handleEnableVideoClick() {
+    bonTalk.enableVideo("outgoing");
+  }
+
   useEffect(() => {
-    props.onSetupLocalVideo();
-    props.onSetupRemoteVideo();
+    // props.onSetupLocalVideo();
+    // props.onSetupRemoteVideo();
 
     return () => {
       props.onRemoveLocalVideo();
@@ -89,6 +94,7 @@ export default function Video(props: CallingProps) {
         </button>
         <button onClick={handleToInCallPad}>回到通話頁面</button>
         <button onClick={handleHangupClick}>掛斷</button> */}
+        <button onClick={handleEnableVideoClick}>EnableVideo</button>
         <ActionPad actionType="VIDEO" onButtonClick={handleActionPress} />
       </VideoContainer>
     </>

@@ -380,7 +380,7 @@ export default class BonTalk {
       sessionDescriptionHandlerOptions: {
         constraints: {
           audio: true,
-          video: true,
+          video: false,
         },
       },
     }
@@ -437,7 +437,7 @@ export default class BonTalk {
       sessionDescriptionHandlerOptions: {
         constraints: {
           audio: true,
-          video: true,
+          video: false,
         },
       },
     }
@@ -615,6 +615,50 @@ export default class BonTalk {
       this.sessionManager.enableVideoSession(sessionName);
     } else {
       this.sessionManager.disableVideoSession(sessionName);
+    }
+  }
+
+  /**
+   * 啟用並傳送視訊串流
+   * @param sessionName - 要啟用視訊的會話名稱
+   */
+  async enableVideo(sessionName: SessionName) {
+    const customSession = this.sessionManager.getSession(sessionName);
+    const currentSession = customSession?.session;
+    if (!currentSession || currentSession.state !== SessionState.Established) {
+      console.warn("[bonTalk] 無法啟用視訊：通話尚未建立或已結束");
+      return;
+    }
+
+    // 啟用本地視訊軌
+    // this.toggleVideoTransport(true, sessionName);
+
+    // 獲取本地視訊串流
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    const localVideoElement = document.getElementById(this.localVideoElementId) as HTMLVideoElement;
+    if (localVideoElement) {
+      localVideoElement.srcObject = stream;
+    }
+
+    // 重新協商 SDP，加入視訊
+    const options: SessionInviteOptions = {
+      sessionDescriptionHandlerOptions: {
+        constraints: {
+          audio: true,
+          video: true, // 啟用視訊
+        },
+      },
+    };
+
+    console.log(currentSession)
+
+    try {
+      await currentSession.invite(options);
+      console.log(currentSession)
+      console.log("[bonTalk] 視訊已成功啟用並傳送");
+      
+    } catch (error) {
+      console.error("[bonTalk] 啟用視訊失敗:", error);
     }
   }
 
