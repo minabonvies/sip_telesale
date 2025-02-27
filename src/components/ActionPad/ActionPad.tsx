@@ -6,13 +6,14 @@ import Phone from "../Icons/phone"
 import Switch from "../Icons/switch"
 import PreForward from "../Icons/pre-forward"
 import Hang from "../Icons/hang"
+import Back from "../Icons/back"
 
 type Props = {
-  actionType?: "DEFAULT" | "RECEIVED_CALL" | "CALLING" | "FORWARD" | "PRE_FORWARD" | "READY_FORWARD" | "DTMF"
+  actionType?: "DEFAULT" | "RECEIVED_CALL" | "CALLING" | "FORWARD" | "PRE_FORWARD" | "READY_FORWARD" | "DTMF" | "VIDEO"
   onButtonClick?: (buttonType: ActionButtonType) => void
 }
 
-export type ActionButtonType = "CALL_VIDEO" | "CALL" | "ACCEPT_PHONE_CALL" | "FORWARD" | "PRE_FORWARD" | "DELETE" | "HANG"
+export type ActionButtonType = "CALL_VIDEO" | "CALL" | "ACCEPT_PHONE_CALL" | "FORWARD" | "PRE_FORWARD" | "DELETE" | "HANG" | "SWITCH_VIDEO" | "BACK"
 
 export default function ActionPad(props: Props) {
   const actionType = props.actionType || "DEFAULT"
@@ -72,6 +73,14 @@ export default function ActionPad(props: Props) {
           <div />
           <KeyPadButton color="error" text={<Hang />} onClick={() => props.onButtonClick?.("HANG")} />
           <div />
+        </>
+      )}
+
+      {actionType === "VIDEO" && (
+        <>
+          <KeyPadButton color="success" text={<Video />} onClick={() => props.onButtonClick?.("SWITCH_VIDEO")} />
+          <KeyPadButton color="error" text={<Hang />} onClick={() => props.onButtonClick?.("HANG")} />
+          <KeyPadButton color="secondary" text={<Back />} onClick={() => props.onButtonClick?.("BACK")} />
         </>
       )}
     </KeyPadContainer>
