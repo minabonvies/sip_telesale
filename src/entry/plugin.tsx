@@ -624,7 +624,7 @@ export default class BonTalk {
     if (!currentSession) {
       return;
     }
-
+    console.log(currentSession.sessionDescriptionHandler)
     // @ts-expect-error sip.js types are not up to date
     currentSession.sessionDescriptionHandler!.peerConnection.getLocalStreams().forEach((stream) => {
       // @ts-expect-error sip.js types are not up to date

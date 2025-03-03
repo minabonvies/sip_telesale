@@ -163,11 +163,6 @@ export default function App() {
           />
         ) : null}
         <ContentFooter>
-          <button onClick={() => setView("IN_CALL")}>IN_CALL</button>
-          <button onClick={() => setView("CALL_VIDEO")}>CALL_VIDEO</button>
-          <button onClick={() => setView("KEY_PAD")}>KEY_PAD</button>
-          <button onClick={() => setView("RECEIVED_CALL")}>RECEIVED_CALL</button>
-          <button onClick={() => {console.log(navigator.mediaDevices)}}>當前媒體視訊流</button>
           <Logo />
         </ContentFooter>
       </Content>
