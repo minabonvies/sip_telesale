@@ -407,6 +407,8 @@ export default class BonTalk {
           break
         case SessionState.Established:
           BonTalk.setupRemoteMedia(inviter, audioElement as HTMLMediaElement)
+          const isVideoEnabled = this.sessionManager.isSessionVideoEnabled(as);
+          this.toggleVideoTransport(isVideoEnabled, as)
           this.triggerOnCallEstablished();
           // console.log("已建立")
           break
@@ -447,6 +449,22 @@ export default class BonTalk {
     }
     await invitation.accept(invitationAcceptOptions)
     this.sessionManager.addSession(as, invitation)
+
+    const customSession = this.sessionManager.getSession(as)
+    const currentSession = customSession?.session
+    if (!currentSession) {
+      return
+    }
+    switch (currentSession.state) {
+      case SessionState.Initial:
+      case SessionState.Establishing:
+      case SessionState.Established:
+        const isVideoEnabled = this.sessionManager.isSessionVideoEnabled(as);
+        this.toggleVideoTransport(isVideoEnabled, as)
+        break
+      case SessionState.Terminating:
+      case SessionState.Terminated:
+    }
   }
 
   async rejectCall(invitation: Invitation) {
@@ -514,27 +532,34 @@ export default class BonTalk {
   }
 
   async setupLocalVideo() {
+    console.log("建立本地視訊")
     try {
      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
      const localVideoElement = document.getElementById(this.localVideoElementId) as HTMLVideoElement;
      if (localVideoElement) {
         localVideoElement.srcObject = stream;
       }
+      console.log(localVideoElement?.srcObject)
+      console.log(navigator.mediaDevices)
     } catch (error) {
       console.error("Error accessing local media devices.", error);
     }
   }
 
   removeLocalVideo() {
+    console.log("移除本地視訊")
     const localVideoElement = document.getElementById(this.localVideoElementId) as HTMLVideoElement;
     if (localVideoElement && localVideoElement.srcObject) {
       const stream = localVideoElement.srcObject as MediaStream;
       stream.getTracks().forEach(track => track.stop());
       localVideoElement.srcObject = null;
     }
+    console.log(localVideoElement?.srcObject)
+    console.log(navigator.mediaDevices)
   }
 
   setupRemoteVideo(sessionName: SessionName) {
+    console.log("建立遠端視訊")
     const customSession = this.sessionManager.getSession(sessionName);
     const currentSession = customSession?.session;
     if (!currentSession || !currentSession.sessionDescriptionHandler) return;
@@ -547,18 +572,15 @@ export default class BonTalk {
       }
     });
 
-    console.log(remoteStream);
-    const hasVideo = remoteStream.getVideoTracks().length > 0;
-    console.log("包含視訊:", hasVideo);
-
     const remoteVideoElement = document.getElementById(this.remoteVideoElementId) as HTMLVideoElement;
-    console.log(this.remoteVideoElementId,remoteVideoElement,remoteStream);
     if (remoteVideoElement) {
       remoteVideoElement.srcObject = remoteStream;
     }
+    console.log(navigator.mediaDevices)
   }
 
   removeRemoteVideo() {
+    console.log("移除遠端視訊")
     const remoteVideoElement = document.getElementById(this.remoteVideoElementId) as HTMLVideoElement;
     if (remoteVideoElement) {
       remoteVideoElement.srcObject = null;
@@ -829,7 +851,7 @@ class CustomSession {
     isHold,
     time,
     timerId,
-    isVideoEnabled = true
+    isVideoEnabled = false
   }: {
     session: Inviter | Invitation
     isMuted: boolean

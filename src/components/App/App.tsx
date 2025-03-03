@@ -41,10 +41,10 @@ export default function App() {
 
   const callTargetTitle = currentSession?.name || ""
 
-  const handleCall = async (numbers: string) => {
+  const handleCall = async (numbers: string, mode: "IN_CALL" | "CALL_VIDEO"  ) => {
     const inviter = await audioCall(numbers, "outgoing")
 
-    setView("IN_CALL")
+    setView(mode)
     startRingBackTone()
     setCurrentCallingTarget("outgoing")
     inviter!.stateChange.addListener((state: SessionState) => {
@@ -81,10 +81,9 @@ export default function App() {
     setMute(!currentSession?.isMuted, currentCallingTarget)
   }
 
-  const handleVideoClick = () => {
+  const handleVideoClick = (isVideoEnabled: boolean) => {
     if (!currentCallingTarget) return
-    const currentSession = bonTalk.sessionManager.getSession(currentCallingTarget)
-    setVideoTransport(!currentSession?.isVideoEnabled, currentCallingTarget)
+    setVideoTransport(isVideoEnabled, currentCallingTarget)
   }
 
   const handleHoldClick = () => {
@@ -132,7 +131,7 @@ export default function App() {
         {view === "KEY_PAD" ? 
           <>
             <KeyPad onCall={handleCall} />
-            <button onClick={() => handleCall('3004')}>打給 3004</button>
+            <button onClick={() => handleCall('3004', "IN_CALL")}>打給 3004</button>
           </>
         : null}
         {view === "RECEIVED_CALL" ? <IncomingCall displayTitle={callTargetTitle} onAccept={handleAccept} onReject={handleReject} /> : null}
@@ -164,6 +163,11 @@ export default function App() {
           />
         ) : null}
         <ContentFooter>
+          <button onClick={() => setView("IN_CALL")}>IN_CALL</button>
+          <button onClick={() => setView("CALL_VIDEO")}>CALL_VIDEO</button>
+          <button onClick={() => setView("KEY_PAD")}>KEY_PAD</button>
+          <button onClick={() => setView("RECEIVED_CALL")}>RECEIVED_CALL</button>
+          <button onClick={() => {console.log(navigator.mediaDevices)}}>當前媒體視訊流</button>
           <Logo />
         </ContentFooter>
       </Content>

@@ -13,7 +13,7 @@ type Props = {
   onButtonClick?: (buttonType: ActionButtonType) => void
 }
 
-export type ActionButtonType = "CALL_VIDEO" | "CALL" | "ACCEPT_PHONE_CALL" | "FORWARD" | "PRE_FORWARD" | "DELETE" | "HANG" | "SWITCH_VIDEO" | "BACK"
+export type ActionButtonType = "CALL_VIDEO" | "CALL" | "ACCEPT_PHONE_CALL" | "FORWARD" | "PRE_FORWARD" | "DELETE" | "HANG" | "CALL_VIDEO" | "BACK"
 
 export default function ActionPad(props: Props) {
   const actionType = props.actionType || "DEFAULT"
@@ -78,7 +78,7 @@ export default function ActionPad(props: Props) {
 
       {actionType === "VIDEO" && (
         <>
-          <KeyPadButton color="success" text={<Video />} onClick={() => props.onButtonClick?.("SWITCH_VIDEO")} />
+          <KeyPadButton color="success" text={<Video />} onClick={() => props.onButtonClick?.("CALL_VIDEO")} />
           <KeyPadButton color="error" text={<Hang />} onClick={() => props.onButtonClick?.("HANG")} />
           <KeyPadButton color="secondary" text={<Back />} onClick={() => props.onButtonClick?.("BACK")} />
         </>
