@@ -1,7 +1,6 @@
 import { useState } from "react"
 import styled from "@emotion/styled"
 import { SessionState } from "sip.js"
-import PadButton from "../PadButton"
 import { useBonTalk } from "@/Provider/BonTalkProvider"
 import { useView } from "@/Provider/ViewProvider"
 import useUA from "@/hooks/useUA"
@@ -132,7 +131,7 @@ export default function App() {
         {view === "KEY_PAD" ? 
           <>
             <KeyPad onCall={handleCall} />
-            <PadButton onClick={() => handleCall('3004', "IN_CALL")} text="打給 3004" />
+            <button onClick={() => handleCall('3004', "IN_CALL")}>打給 3004</button>
           </>
         : null}
         {view === "RECEIVED_CALL" ? <IncomingCall displayTitle={callTargetTitle} onAccept={handleAccept} onReject={handleReject} /> : null}
@@ -164,7 +163,7 @@ export default function App() {
           />
         ) : null}
         <ContentFooter>
-          {/* <Logo /> */}
+          <Logo />
         </ContentFooter>
       </Content>
     </AppContainer>
@@ -199,10 +198,10 @@ const ContentFooter = styled.div({
   justifyContent: "center",
 })
 
-// const Logo = styled.div({
-//   width: "48px",
-//   height: "32px",
-//   backgroundImage: "url(vite.svg)",
-//   backgroundSize: "cover",
-//   backgroundPosition: "center",
-// })
+const Logo = styled.div({
+  width: "48px",
+  height: "32px",
+  backgroundImage: "url(vite.svg)",
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+})
