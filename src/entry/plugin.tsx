@@ -154,7 +154,7 @@ export default class BonTalk {
       noAnswerTimeout: this.noAnswerTimeout,
       transportOptions: {
         server: this.wsServer,
-        traceSip: true,
+        traceSip: false,
       },
       contactParams: { transport: "wss" },
     })
@@ -192,7 +192,7 @@ export default class BonTalk {
       position: this.panelConfig.position,
       topOffset: this.panelConfig.topOffset,
       zIndex: this.panelConfig.zIndex,
-      hidden: true
+      hidden: false
     };
 
     // Find the first matching breakpoint and merge configurations
