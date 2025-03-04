@@ -11,7 +11,6 @@ import Video from "@/views/Video"
 import { SessionName } from "@/entry/plugin"
 import { useAudio } from "@/Provider/AudioProvider"
 
-
 export default function App() {
   const bonTalk = useBonTalk()!
   const { view, setView, currentCallingTarget, setCurrentCallingTarget } = useView()

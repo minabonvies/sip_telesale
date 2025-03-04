@@ -58,17 +58,9 @@ export default class BonTalk {
   private panelConfig?: PanelConfig;
   private resizeObserver: ResizeObserver | null = null;
 
-  static get audioElementId() {
-    return "_bon_sip_phone_audio"
-  }
-
-  static get localVideoElementId() {
-    return "_bon_sip_phone_local_video"
-  }
-
-  static get remoteVideoElementId() {
-    return "_bon_sip_phone_remote_video"
-  }
+  public audioElementId: string = "_bon_sip_phone_audio"
+  public localVideoElementId: string = "_bon_sip_phone_local_video"
+  public remoteVideoElementId: string = "_bon_sip_phone_remote_video"
 
   static get rootId() {
     return "_bon_sip_phone_root"
@@ -111,6 +103,9 @@ export default class BonTalk {
     displayName,
     themeColor,
     panelConfig = {},
+    audioElementId,
+    localVideoElementId,
+    remoteVideoElementId
   }: {
     wsServer: string
     domains: string[]
@@ -119,8 +114,14 @@ export default class BonTalk {
     displayName: string
     themeColor?: string
     panelConfig?: PanelConfig
+    audioElementId?: string
+    localVideoElementId?: string
+    remoteVideoElementId?: string
   }) {
     this.wsServer = wsServer
+    this.audioElementId = audioElementId ?? this.audioElementId
+    this.localVideoElementId = localVideoElementId ?? this.localVideoElementId
+    this.remoteVideoElementId = remoteVideoElementId ?? this.remoteVideoElementId
 
     if (domains.length === 0) {
       throw new BonTalkError("[bonTalk] domains should not be empty")
@@ -153,7 +154,7 @@ export default class BonTalk {
       noAnswerTimeout: this.noAnswerTimeout,
       transportOptions: {
         server: this.wsServer,
-        traceSip: false,
+        traceSip: true,
       },
       contactParams: { transport: "wss" },
     })
@@ -191,7 +192,7 @@ export default class BonTalk {
       position: this.panelConfig.position,
       topOffset: this.panelConfig.topOffset,
       zIndex: this.panelConfig.zIndex,
-      hidden: false
+      hidden: true
     };
 
     // Find the first matching breakpoint and merge configurations
@@ -304,18 +305,6 @@ export default class BonTalk {
 
   get registererInstance() {
     return this.registerer
-  }
-
-  get audioElementId() {
-    return BonTalk.audioElementId
-  }
-
-  get localVideoElementId() {
-    return BonTalk.localVideoElementId
-  }
-
-  get remoteVideoElementId() {
-    return BonTalk.remoteVideoElementId
   }
 
   get rootId() {
