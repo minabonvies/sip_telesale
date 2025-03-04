@@ -1,3 +1,6 @@
+import { useBonTalk } from "@/Provider/BonTalkProvider"
+import { useView } from "@/Provider/ViewProvider"
+
 import styled from "@emotion/styled"
 import Hold from "../Icons/hold"
 import KeyPad from "../Icons/keypad"
@@ -19,8 +22,24 @@ type Props = {
   disabledTransfer?: boolean
 }
 export default function Menu(props: Props) {
-  const { onMuteClick, onHoldClick, onKeyPadClick, onVideoClick, onSwitchClick, onPreForwardClick, isMuted, isHold, disabledTransfer } =
-    props
+  const {
+    onMuteClick,
+    onHoldClick,
+    onKeyPadClick,
+    onVideoClick,
+    onSwitchClick,
+    onPreForwardClick,
+    isMuted,
+    isHold,
+    disabledTransfer
+  } = props
+  
+  const bonTalk = useBonTalk()!
+  const { currentCallingTarget } = useView()
+  
+  const currentSession = bonTalk.sessionManager.getSession(currentCallingTarget);
+  const currentSessionState = currentSession?.session?.state;
+  console.log("currentSessionState", currentSessionState)
 
   return (
     <MenuContainer>

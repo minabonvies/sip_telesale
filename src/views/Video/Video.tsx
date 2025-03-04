@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import styled from "@emotion/styled"
 import { useBonTalk } from "@/Provider/BonTalkProvider"
 import { useView } from "@/Provider/ViewProvider"
@@ -16,6 +16,7 @@ type CallingProps = {
 export default function Video(props: CallingProps) {
   const bonTalk = useBonTalk()!
   const { setView, currentCallingTarget, setCurrentCallingTarget } = useView()
+  const [isLocalVideoLarge, setIsLocalVideoLarge] = useState(false)
 
   const handleVideoClick = () => {
     if (!currentCallingTarget) return
@@ -60,41 +61,82 @@ export default function Video(props: CallingProps) {
     }
   }
 
+  const toggleVideoSize = () => {
+    setIsLocalVideoLarge(!isLocalVideoLarge)
+  }
+
   useEffect(() => {
     // 設定視訊流 設置
     props.onSetupLocalVideo();
     props.onSetupRemoteVideo();
     // 視訊流傳遞 開啟
     props.onVideoClick(true);
+    return () => {
+      // 設定視訊流 移除
+      props.onRemoveLocalVideo();
+      props.onRemoveRemoteVideo();
+    }
   }, []);
 
   return (
     <>
       <Header />
       <VideoContainer>
-        {/* 視訊畫面 */}
-        <CallingTargetTitle>視訊畫面</CallingTargetTitle>
-        <video id={bonTalk!.localVideoElementId} width='100%' autoPlay playsInline muted></video>
-        <video id={bonTalk!.remoteVideoElementId} width='100%' autoPlay playsInline muted></video>
-        <ActionPad actionType="VIDEO" onButtonClick={handleActionPress} />
+        <RemoteVideo
+          id={bonTalk!.remoteVideoElementId}
+          large={!isLocalVideoLarge}
+          onClick={toggleVideoSize}
+          autoPlay
+          playsInline
+          muted
+        ></RemoteVideo>
+        <LocalVideo
+          id={bonTalk!.localVideoElementId}
+          large={isLocalVideoLarge}
+          onClick={toggleVideoSize}
+          autoPlay
+          playsInline
+          muted
+        ></LocalVideo>
+        <ActionPadContainer>
+          <ActionPad actionType="VIDEO" onButtonClick={handleActionPress} />
+        </ActionPadContainer>
       </VideoContainer>
     </>
   )
 }
 
-const CallingTargetTitle = styled("div")((props) => ({
-  ...props.theme.typography.h1,
-  color: props.theme.colors.text.primary,
-  height: "32px",
-}))
-
-
 const VideoContainer = styled.div({
+  position: "relative",
   display: "flex",
   flexDirection: "column",
   flex: 1,
   alignItems: "center",
-  paddingTop: "16px",
-  paddingBottom: "18px",
-  outline: "none"
+  justifyContent: "center",
+  height: "100vh",
+  backgroundColor: "#000",
+})
+
+const VideoElement = styled.video<{ large: boolean }>(({ large }) => ({
+  position: large ? "static" : "absolute",
+  width: large ? "100%" : "100px",
+  height: large ? "100%" : "150px",
+  objectFit: "cover",
+  borderRadius: large ? "0" : "8px",
+  bottom: large ? "auto" : "80px",
+  right: large ? "auto" : "16px",
+  cursor: "pointer",
+}))
+
+const RemoteVideo = styled(VideoElement)({})
+
+const LocalVideo = styled(VideoElement)({})
+
+const ActionPadContainer = styled.div({
+  position: "absolute",
+  bottom: "16px",
+  width: "100%",
+  display: "flex",
+  justifyContent: "center",
+  padding: "0 16px",
 })

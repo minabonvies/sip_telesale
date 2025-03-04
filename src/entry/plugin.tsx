@@ -1018,4 +1018,3 @@ class SessionManager {
     return session ? session.isVideoEnabled : false;
   }
 }
-

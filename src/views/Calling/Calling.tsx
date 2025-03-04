@@ -19,7 +19,6 @@ type CallingProps = {
   onHangClick: () => void
   onHoldClick: () => void
   onMuteClick: () => void
-  // onKeyPadClick: () => void
   onForwardClick: (number: string) => void
   onPreForwardSendCall: (number: string) => void
 
@@ -29,7 +28,7 @@ type CallingProps = {
 export default function Calling(props: CallingProps) {
   const bonTalk = useBonTalk()!
 
-  const { view, setView, currentCallingTarget, setCurrentCallingTarget } = useView()
+  const { setView } = useView()
 
   const currentSession = useSyncExternalStore(bonTalk.sessionManager.subscribe.bind(bonTalk.sessionManager), () =>
     bonTalk.sessionManager.getSession(props.currentSessionName)
