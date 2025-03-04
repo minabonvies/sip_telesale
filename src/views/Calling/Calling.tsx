@@ -8,6 +8,7 @@ import { useBonTalk } from "@/Provider/BonTalkProvider"
 import NumberPad from "@/components/NumberPad"
 import Header from "@/components/Header"
 import useInputKeys from "@/hooks/useInputKeys"
+import { useView } from "@/Provider/ViewProvider"
 
 type CallingProps = {
   currentSessionName: SessionName | ""
@@ -18,7 +19,6 @@ type CallingProps = {
   onHangClick: () => void
   onHoldClick: () => void
   onMuteClick: () => void
-  // onKeyPadClick: () => void
   onForwardClick: (number: string) => void
   onPreForwardSendCall: (number: string) => void
 
@@ -27,6 +27,8 @@ type CallingProps = {
 
 export default function Calling(props: CallingProps) {
   const bonTalk = useBonTalk()!
+
+  const { setView } = useView()
 
   const currentSession = useSyncExternalStore(bonTalk.sessionManager.subscribe.bind(bonTalk.sessionManager), () =>
     bonTalk.sessionManager.getSession(props.currentSessionName)
@@ -93,7 +95,6 @@ export default function Calling(props: CallingProps) {
     if (actionPadType) {
       props.onDTMFClick(key)
     }
-
     enterKey(key)
   }
 
@@ -118,16 +119,27 @@ export default function Calling(props: CallingProps) {
     setOpenKeyPad(false)
   }
 
+  const handleVideoClick = () => {
+    setView("CALL_VIDEO")
+  }
+
   const callingRef = useRef<HTMLDivElement>(null);
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    console.log("handleKeyDown", e.key)
-    if (e.key === "Enter") {
-      props.onHangClick()
+
+  const handleFocusKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (/^[0-9*#]$/.test(e.key)) {
+      handleKeyPress(e.key);
+    } else if (e.key === "Enter") {
+      handleActionPress("CALL")
+    } else if (e.key === "Backspace") {
+      handleActionPress("DELETE")
+    } else {
+      throw new Error("Invalid key")
     }
   }
+
   useEffect(() => {
     callingRef.current?.focus();
-  }, []);
+  }, [openKeyPad]);
   
   return (
     <>
@@ -138,7 +150,12 @@ export default function Calling(props: CallingProps) {
         showCancelButton={openKeyPad}
         onCancelClick={handleCancelClick}
       />
-      <ViewContainer id="calling" ref={callingRef} tabIndex={0} onKeyDown={handleKeyDown}>
+      <ViewContainer 
+        id="calling" 
+        ref={callingRef} 
+        tabIndex={1} 
+        onKeyDown={(e) => handleFocusKeyDown(e)}
+      >
         {/* 通話畫面 */}
         {!openKeyPad ? (
           <>
@@ -154,6 +171,7 @@ export default function Calling(props: CallingProps) {
               onKeyPadClick={handleKeyPadClick}
               onSwitchClick={handleSwitchClick}
               onPreForwardClick={handlePreForwardClick}
+              onVideoClick={handleVideoClick}
               disabledTransfer={props.currentSessionName === "attendedRefer"}
             />
             <div style={{ flex: 1 }} />

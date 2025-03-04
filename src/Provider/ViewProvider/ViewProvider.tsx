@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from "react"
 import { SessionName } from "@/entry/plugin"
 
-type ViewName = "KEY_PAD" | "RECEIVED_CALL" | "IN_CALL"
+type ViewName = "KEY_PAD" | "RECEIVED_CALL" | "IN_CALL" | "CALL_VIDEO"
 type ViewContextType = {
   view: ViewName
   setView: (view: ViewName) => void

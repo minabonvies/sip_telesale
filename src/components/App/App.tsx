@@ -1,13 +1,13 @@
 import { useState } from "react"
 import styled from "@emotion/styled"
 import { SessionState } from "sip.js"
-
 import { useBonTalk } from "@/Provider/BonTalkProvider"
 import { useView } from "@/Provider/ViewProvider"
 import useUA from "@/hooks/useUA"
 import KeyPad from "@/views/KeyPad"
 import IncomingCall from "@/views/IncomingCall"
 import Calling from "@/views/Calling"
+import Video from "@/views/Video"
 import { SessionName } from "@/entry/plugin"
 import { useAudio } from "@/Provider/AudioProvider"
 
@@ -20,11 +20,16 @@ export default function App() {
     answerCall,
     rejectCall,
     setMute,
+    setVideoTransport,
     setHold,
     blindTransfer,
     preAttendedTransfer,
     attendedTransfer,
     sendDTMF,
+    setupLocalVideo,
+    removeLocalVideo,
+    setupRemoteVideo,
+    removeRemoteVideo,
   } = useUA()
   const [tempCurrentCallingTarget, setTempCurrentCallingTarget] = useState<SessionName | "">("");
 
@@ -35,10 +40,10 @@ export default function App() {
 
   const callTargetTitle = currentSession?.name || ""
 
-  const handleCall = async (numbers: string) => {
+  const handleCall = async (numbers: string, mode: "IN_CALL" | "CALL_VIDEO"  ) => {
     const inviter = await audioCall(numbers, "outgoing")
 
-    setView("IN_CALL")
+    setView(mode)
     startRingBackTone()
     setCurrentCallingTarget("outgoing")
     inviter!.stateChange.addListener((state: SessionState) => {
@@ -73,6 +78,11 @@ export default function App() {
     if (!currentCallingTarget) return
     const currentSession = bonTalk.sessionManager.getSession(currentCallingTarget)
     setMute(!currentSession?.isMuted, currentCallingTarget)
+  }
+
+  const handleVideoClick = (isVideoEnabled: boolean) => {
+    if (!currentCallingTarget) return
+    setVideoTransport(isVideoEnabled, currentCallingTarget)
   }
 
   const handleHoldClick = () => {
@@ -113,11 +123,13 @@ export default function App() {
     if (!currentCallingTarget) return
     await sendDTMF(key, currentCallingTarget)
   }
-
+  
   return (
     <AppContainer>
       <Content>
-        {view === "KEY_PAD" ? <KeyPad onCall={handleCall} /> : null}
+        {view === "KEY_PAD" ? 
+          <KeyPad onCall={handleCall} />
+        : null}
         {view === "RECEIVED_CALL" ? <IncomingCall displayTitle={callTargetTitle} onAccept={handleAccept} onReject={handleReject} /> : null}
         {view === "IN_CALL" ? (
           <Calling
@@ -131,6 +143,19 @@ export default function App() {
             onForwardClick={handleForwardClick}
             onPreForwardSendCall={handlePreForwardSendCall}
             onDTMFClick={handleDTMFClick}
+          />
+        ) : null}
+        {view === "CALL_VIDEO" ? ( 
+          <Video
+            onVideoClick={handleVideoClick}
+            onSetupLocalVideo={setupLocalVideo}
+            onRemoveLocalVideo={removeLocalVideo}
+            onSetupRemoteVideo={() => {
+              if (currentCallingTarget) {
+                setupRemoteVideo(currentCallingTarget as SessionName)
+              }
+            }}
+            onRemoveRemoteVideo={removeRemoteVideo}
           />
         ) : null}
         <ContentFooter>

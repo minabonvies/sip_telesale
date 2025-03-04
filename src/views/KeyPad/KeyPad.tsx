@@ -9,7 +9,7 @@ import Header from "@/components/Header"
 import { useAudio } from "@/Provider/AudioProvider"
 
 type KeyPadProps = {
-  onCall: (numbers: string) => void
+  onCall: (numbers: string, mode: "IN_CALL" | "CALL_VIDEO") => void
 }
 
 export default function KeyPad(props: KeyPadProps) {
@@ -20,14 +20,20 @@ export default function KeyPad(props: KeyPadProps) {
       toggleDTMF()
   }
   const handleActionPress = (action: ActionButtonType) => {
+    console.log("action", action)
     switch (action) {
       case "CALL":
-        if (inputKeys) {
-          props.onCall(inputKeys)
+        if (inputKeys) { 
+          props.onCall(inputKeys, "IN_CALL")
         }
         break
       case "DELETE":
         deleteKey()
+        break
+      case "CALL_VIDEO":
+        if (inputKeys) {
+          props.onCall(inputKeys, "CALL_VIDEO")
+        }
         break
       default:
         throw new Error("Invalid action")
@@ -51,11 +57,6 @@ export default function KeyPad(props: KeyPadProps) {
       <Header />
       <ViewContainer
         id="key-pad"
-        onClick={(e) => {
-          if (e.target instanceof HTMLElement) {
-            e.target.focus();
-          }
-        }}
         tabIndex={1} 
         onKeyDown={(e) => handleFocusKeyDown(e)}
       >

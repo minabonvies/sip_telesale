@@ -58,9 +58,9 @@ export default class BonTalk {
   private panelConfig?: PanelConfig;
   private resizeObserver: ResizeObserver | null = null;
 
-  static get audioElementId() {
-    return "_bon_sip_phone_audio"
-  }
+  public audioElementId: string = "_bon_sip_phone_audio"
+  public localVideoElementId: string = "_bon_sip_phone_local_video"
+  public remoteVideoElementId: string = "_bon_sip_phone_remote_video"
 
   static get rootId() {
     return "_bon_sip_phone_root"
@@ -103,6 +103,9 @@ export default class BonTalk {
     displayName,
     themeColor,
     panelConfig = {},
+    audioElementId,
+    localVideoElementId,
+    remoteVideoElementId
   }: {
     wsServer: string
     domains: string[]
@@ -111,8 +114,14 @@ export default class BonTalk {
     displayName: string
     themeColor?: string
     panelConfig?: PanelConfig
+    audioElementId?: string
+    localVideoElementId?: string
+    remoteVideoElementId?: string
   }) {
     this.wsServer = wsServer
+    this.audioElementId = audioElementId ?? this.audioElementId
+    this.localVideoElementId = localVideoElementId ?? this.localVideoElementId
+    this.remoteVideoElementId = remoteVideoElementId ?? this.remoteVideoElementId
 
     if (domains.length === 0) {
       throw new BonTalkError("[bonTalk] domains should not be empty")
@@ -298,10 +307,6 @@ export default class BonTalk {
     return this.registerer
   }
 
-  get audioElementId() {
-    return BonTalk.audioElementId
-  }
-
   get rootId() {
     return BonTalk.rootId
   }
@@ -364,12 +369,13 @@ export default class BonTalk {
       sessionDescriptionHandlerOptions: {
         constraints: {
           audio: true,
-          video: false,
+          video: true,
         },
       },
     }
 
     const audioElement = document.getElementById(this.audioElementId)
+
     if (!audioElement) {
       throw new BonTalkError(`[bonTalk] audioElement with id ${this.audioElementId} not found`)
     }
@@ -390,6 +396,8 @@ export default class BonTalk {
           break
         case SessionState.Established:
           BonTalk.setupRemoteMedia(inviter, audioElement as HTMLMediaElement)
+          const isVideoEnabled = this.sessionManager.isSessionVideoEnabled(as);
+          this.toggleVideoTransport(isVideoEnabled, as)
           this.triggerOnCallEstablished();
           // console.log("已建立")
           break
@@ -398,6 +406,7 @@ export default class BonTalk {
           // console.log("結束中")
           break
         case SessionState.Terminated:
+          console.warn("已掛斷 Terminated")
           this.sessionManager.removeSession(as)
           BonTalk.cleanupMedia(audioElement as HTMLMediaElement)
           this.triggerOnCallTerminated();
@@ -419,7 +428,7 @@ export default class BonTalk {
       sessionDescriptionHandlerOptions: {
         constraints: {
           audio: true,
-          video: false,
+          video: true,
         },
       },
     }
@@ -429,6 +438,22 @@ export default class BonTalk {
     }
     await invitation.accept(invitationAcceptOptions)
     this.sessionManager.addSession(as, invitation)
+
+    const customSession = this.sessionManager.getSession(as)
+    const currentSession = customSession?.session
+    if (!currentSession) {
+      return
+    }
+    switch (currentSession.state) {
+      case SessionState.Initial:
+      case SessionState.Establishing:
+      case SessionState.Established:
+        const isVideoEnabled = this.sessionManager.isSessionVideoEnabled(as);
+        this.toggleVideoTransport(isVideoEnabled, as)
+        break
+      case SessionState.Terminating:
+      case SessionState.Terminated:
+    }
   }
 
   async rejectCall(invitation: Invitation) {
@@ -495,6 +520,62 @@ export default class BonTalk {
     }
   }
 
+  async setupLocalVideo() {
+    console.log("建立本地視訊")
+    try {
+     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+     const localVideoElement = document.getElementById(this.localVideoElementId) as HTMLVideoElement;
+     if (localVideoElement) {
+        localVideoElement.srcObject = stream;
+      }
+      console.log(localVideoElement?.srcObject)
+      console.log(navigator.mediaDevices)
+    } catch (error) {
+      console.error("Error accessing local media devices.", error);
+    }
+  }
+
+  removeLocalVideo() {
+    console.log("移除本地視訊")
+    const localVideoElement = document.getElementById(this.localVideoElementId) as HTMLVideoElement;
+    if (localVideoElement && localVideoElement.srcObject) {
+      const stream = localVideoElement.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      localVideoElement.srcObject = null;
+    }
+    console.log(localVideoElement?.srcObject)
+    console.log(navigator.mediaDevices)
+  }
+
+  setupRemoteVideo(sessionName: SessionName) {
+    console.log("建立遠端視訊")
+    const customSession = this.sessionManager.getSession(sessionName);
+    const currentSession = customSession?.session;
+    if (!currentSession || !currentSession.sessionDescriptionHandler) return;
+
+    const remoteStream = new MediaStream();
+    const peerConnection = (currentSession.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
+    peerConnection.getReceivers().forEach((receiver: { track: MediaStreamTrack; }) => {
+      if (receiver.track) {
+        remoteStream.addTrack(receiver.track);
+      }
+    });
+
+    const remoteVideoElement = document.getElementById(this.remoteVideoElementId) as HTMLVideoElement;
+    if (remoteVideoElement) {
+      remoteVideoElement.srcObject = remoteStream;
+    }
+    console.log(navigator.mediaDevices)
+  }
+
+  removeRemoteVideo() {
+    console.log("移除遠端視訊")
+    const remoteVideoElement = document.getElementById(this.remoteVideoElementId) as HTMLVideoElement;
+    if (remoteVideoElement) {
+      remoteVideoElement.srcObject = null;
+    }
+  }
+
   /**
    * Puts Session on mute.
    * @param mute - Mute on if true, off if false.
@@ -519,6 +600,33 @@ export default class BonTalk {
       this.sessionManager.unmuteSession(sessionName)
     }
     // MUTE HOLD NEED TO STATE
+  }
+
+  /**
+   * Toggles the local video stream on or off.
+   * @param enable - If true, enables the video; if false, disables the video.
+   * @param sessionName - The name of the session to toggle video for.
+   */
+  toggleVideoTransport(enable: boolean, sessionName: SessionName) {
+    const customSession = this.sessionManager.getSession(sessionName);
+    const currentSession = customSession?.session;
+    if (!currentSession) {
+      return;
+    }
+    console.log(currentSession.sessionDescriptionHandler)
+    // @ts-expect-error sip.js types are not up to date
+    currentSession.sessionDescriptionHandler!.peerConnection.getLocalStreams().forEach((stream) => {
+      // @ts-expect-error sip.js types are not up to date
+      stream.getVideoTracks().forEach((track) => {
+        track.enabled = enable;
+      });
+    });
+
+    if (enable) {
+      this.sessionManager.enableVideoSession(sessionName);
+    } else {
+      this.sessionManager.disableVideoSession(sessionName);
+    }
   }
 
   async sendDTMF(tone: string, sessionName: SessionName) {
@@ -708,6 +816,7 @@ class CustomSession {
   isHold: boolean = false
   time: number = 0
   timerId: number | null = null
+  isVideoEnabled: boolean = true;
 
   get name() {
     if (!this.session) {
@@ -731,18 +840,21 @@ class CustomSession {
     isHold,
     time,
     timerId,
+    isVideoEnabled = false
   }: {
     session: Inviter | Invitation
     isMuted: boolean
     isHold: boolean
     time: number
     timerId: number | null
+    isVideoEnabled?: boolean
   }) {
     this.session = session
     this.isMuted = isMuted
     this.isHold = isHold
     this.time = time
     this.timerId = timerId
+    this.isVideoEnabled = isVideoEnabled;
   }
 
   copy() {
@@ -752,6 +864,7 @@ class CustomSession {
       isHold: this.isHold,
       time: this.time,
       timerId: this.timerId,
+      isVideoEnabled: this.isVideoEnabled
     })
   }
 }
@@ -868,5 +981,29 @@ class SessionManager {
       listener()
     })
   }
-}
 
+  enableVideoSession<T extends SessionName>(type: T) {
+    const session = this.sessions.get(type);
+    if (session) {
+      session.isVideoEnabled = true;
+      const newSession = session.copy();
+      this.sessions.set(type, newSession);
+      this.emitChange();
+    }
+  }
+
+  disableVideoSession<T extends SessionName>(type: T) {
+    const session = this.sessions.get(type);
+    if (session) {
+      session.isVideoEnabled = false;
+      const newSession = session.copy();
+      this.sessions.set(type, newSession);
+      this.emitChange();
+    }
+  }
+
+  isSessionVideoEnabled<T extends SessionName>(type: T) {
+    const session = this.sessions.get(type);
+    return session ? session.isVideoEnabled : false;
+  }
+}

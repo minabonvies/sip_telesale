@@ -119,6 +119,11 @@ export default function useUA() {
     bonTalk.toggleMicrophone(mute, target)
   }
 
+  const setVideoTransport = (videoSwitch: boolean, target: SessionName) => {
+    if (!bonTalk) return
+    bonTalk.toggleVideoTransport(videoSwitch, target)
+  }
+
   const sendDTMF = async (tone: string, to: SessionName) => {
     if (!bonTalk) return
     try {
@@ -164,6 +169,27 @@ export default function useUA() {
     }
   }
 
+  const setupLocalVideo = async () => {
+    if (!bonTalk) return
+    return await bonTalk.setupLocalVideo()
+  }
+
+  const removeLocalVideo = () => {
+    if (!bonTalk) return
+    return bonTalk.removeLocalVideo()
+  }
+
+  const setupRemoteVideo = (session: SessionName) => {
+    if (!bonTalk) return
+    return bonTalk.setupRemoteVideo(session)
+  }
+
+  const removeRemoteVideo = () => {
+    if (!bonTalk) return
+    return bonTalk.removeRemoteVideo()
+  }
+
+
   return {
     receivedInvitation,
     audioCall,
@@ -173,8 +199,13 @@ export default function useUA() {
     setHold,
     sendDTMF,
     setMute,
+    setVideoTransport,
     blindTransfer,
     preAttendedTransfer,
     attendedTransfer,
+    setupLocalVideo,
+    removeLocalVideo,
+    setupRemoteVideo,
+    removeRemoteVideo,
   }
 }

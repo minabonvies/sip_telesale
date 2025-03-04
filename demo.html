@@ -20,7 +20,26 @@
       password: "1234",
       displayName: "3004 Leo",
     })
-
+    bonTalkInstance.onCallInitial(() => {
+      console.log("準備中");
+    });
+    
+    bonTalkInstance.onCallEstablishing(() => {
+      console.log("建立中");
+    });
+    
+    bonTalkInstance.onCallEstablished(() => {
+      console.log("已建立");
+      console.log(bonTalkInstance?.callId)
+    });
+    
+    bonTalkInstance.onCallTerminating(() => {
+      console.log("結束中");
+    });
+    
+    bonTalkInstance.onCallTerminated(() => {
+      console.log("已結束");
+    });
     const bonTalkBtn = document.getElementById("phone-btn")
     bonTalkBtn.addEventListener("click", () => {
       if (!bonTalk) {
