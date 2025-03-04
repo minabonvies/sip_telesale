@@ -128,10 +128,7 @@ export default function App() {
     <AppContainer>
       <Content>
         {view === "KEY_PAD" ? 
-          <>
-            <KeyPad onCall={handleCall} />
-            <button onClick={() => handleCall('3004', "IN_CALL")}>打給 3004</button>
-          </>
+          <KeyPad onCall={handleCall} />
         : null}
         {view === "RECEIVED_CALL" ? <IncomingCall displayTitle={callTargetTitle} onAccept={handleAccept} onReject={handleReject} /> : null}
         {view === "IN_CALL" ? (
